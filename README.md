@@ -26,3 +26,4 @@ Useful environment variables/secrets:
 
 After confirming the backend serves the SPA (https://alassaad.fly.dev), destroy the legacy `alassaad-frontend` Fly app to avoid double billing: `fly apps destroy alassaad-frontend`.
 # constructiondashboard
+# constructiondashboard
