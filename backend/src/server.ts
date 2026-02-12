@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import prisma from "./prismaClient";
 import authRoutes from "./routes/authRoutes";
+import healthRoutes from "./routes/healthRoutes";
 import receiptRoutes from "./routes/receiptRoutes";
 import jobSiteRoutes from "./routes/jobSiteRoutes";
 import supplierRoutes from "./routes/supplierRoutes";
@@ -62,6 +63,7 @@ app.use(
 app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 
+app.use(healthRoutes);
 app.use("/auth", authRoutes);
 
 const staticDir = path.resolve(__dirname, "../public");
