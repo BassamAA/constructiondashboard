@@ -3,6 +3,7 @@
 **/.env
 **/.env.*
 !.env.example
+!**/.env.test.example
 **/playwright-report/
 **/.playwright-cache/
 **/playwright/.auth/storageState.json
