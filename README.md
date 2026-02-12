@@ -34,5 +34,3 @@ Useful environment variables/secrets:
 - `CORS_ORIGIN` – include the production domain(s), e.g. `https://alassaad.fly.dev`.
 
 After confirming the backend serves the SPA (https://alassaad.fly.dev), destroy the legacy `alassaad-frontend` Fly app to avoid double billing: `fly apps destroy alassaad-frontend`.
-# constructiondashboard
-# constructiondashboard
