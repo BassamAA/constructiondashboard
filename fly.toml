@@ -1,0 +1,26 @@
+# fly.toml app configuration for combined backend + frontend
+
+app = "alassaad"
+primary_region = "ams"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+  [build.args]
+    VITE_API_BASE = "https://alassaad.fly.dev"
+
+[deploy]
+  release_command = "node scripts/run-migrations.js"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 1

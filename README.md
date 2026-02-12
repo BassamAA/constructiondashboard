@@ -8,6 +8,15 @@ This repository hosts the backend API (`backend/`) and the React SPA (`frontend/
 2. Launch the API: `cd backend && npm install && npm run dev`.
 3. In another terminal run the UI: `cd frontend && npm install && VITE_API_BASE=http://localhost:4000 npm run dev`.
 
+## Environment variables
+
+Templates are provided so secrets do not get committed:
+
+- `backend/.env.example`
+- `frontend/.env.example`
+
+Copy them to `.env` locally and fill in real values. Do not commit `.env` files.
+
 ## Production deployment (single Fly app)
 
 The root `fly.toml` describes the `alassaad` Fly app and references `backend/Dockerfile`. The Docker build multi-stage compiles the frontend bundle and copies it into the backend image so Express can serve it.

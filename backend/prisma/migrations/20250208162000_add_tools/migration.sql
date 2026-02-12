@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS "Tool" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL UNIQUE,
+    "quantity" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "unit" TEXT,
+    "notes" TEXT,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

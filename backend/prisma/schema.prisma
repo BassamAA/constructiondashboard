@@ -1,0 +1,647 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id                       Int           @id @default(autoincrement())
+  name                     String
+  contactName              String?
+  receiptType              ReceiptType   @default(NORMAL)
+  phone                    String?
+  email                    String?
+  notes                    String?
+  createdAt                DateTime      @default(now())
+  manualBalanceNote        String?
+  manualBalanceOverride    Float?
+  manualBalanceUpdatedAt   DateTime?
+  manualBalanceUpdatedById Int?
+  manualBalanceUpdatedBy   User?         @relation("CustomerManualBalanceUser", fields: [manualBalanceUpdatedById], references: [id])
+  debrisEntries            DebrisEntry[]
+  jobSites                 JobSite[]
+  payments                 Payment[]
+  receipts                 Receipt[]
+  invoices                 Invoice[]
+  pairing                  CustomerSupplierLink?
+}
+
+model Driver {
+  id         Int         @id @default(autoincrement())
+  name       String
+  phone      String?
+  dieselLogs DieselLog[]
+  receipts   Receipt[]
+  trucks     Truck[]
+}
+
+model Truck {
+  id         Int           @id @default(autoincrement())
+  plateNo    String
+  driverId   Int?
+  dieselLogs DieselLog[]
+  receipts   Receipt[]
+  driver     Driver?       @relation(fields: [driverId], references: [id])
+  repairs    TruckRepair[]
+  insuranceExpiry DateTime?
+}
+
+model Product {
+  id                        Int              @id @default(autoincrement())
+  name                      String
+  unit                      String
+  unitPrice                 Float?
+  description               String?
+  stockQty                  Float            @default(0)
+  isManufactured            Boolean          @default(false)
+  isComposite               Boolean          @default(false)
+  hasAggregatePresets       Boolean          @default(false)
+  productionPowderProductId Int?
+  productionPowderQuantity  Float?
+  productionCementProductId Int?
+  productionCementQuantity  Float?
+  isFuel                    Boolean          @default(false)
+  pieceworkRate             Float?
+  helperPieceworkRate       Float?
+  tehmilFee                 Float?           @default(0)
+  tenzilFee                 Float?           @default(0)
+  cementUsageEntries        InventoryEntry[] @relation("CementUsage")
+  powderUsageEntries        InventoryEntry[] @relation("PowderUsage")
+  inventoryEntries          InventoryEntry[] @relation("InventoryEntryProduct")
+  stonePayrollEntries       PayrollEntry[]   @relation("PayrollEntry_stoneProduct")
+  productionCementProduct   Product?         @relation("ProductionCement", fields: [productionCementProductId], references: [id])
+  productionCementFor       Product[]        @relation("ProductionCement")
+  productionPowderProduct   Product?         @relation("ProductionPowder", fields: [productionPowderProductId], references: [id])
+  productionPowderFor       Product[]        @relation("ProductionPowder")
+  receiptItems              ReceiptItem[]
+  stockMoves                StockMovement[]
+  compositeComponents       ProductComponent[] @relation("CompositeParent")
+  compositeParents          ProductComponent[] @relation("CompositeComponent")
+  compositeUsages           ReceiptItemComponent[]
+  manufacturingPieceRates   ManufacturingPieceRate[]
+}
+
+model Receipt {
+  id              Int              @id @default(autoincrement())
+  receiptNo       String           @unique
+  date            DateTime         @default(now())
+  type            ReceiptType      @default(NORMAL)
+  customerId      Int?
+  jobSiteId       Int?
+  walkInName      String?
+  driverId        Int?
+  truckId         Int?
+  tehmil          Boolean         @default(false)
+  tenzil          Boolean         @default(false)
+  tehmilPaidAt    DateTime?
+  tehmilPaymentAmount    Float?
+  tehmilPaymentNote      String?
+  tenzilPaidAt    DateTime?
+  tenzilPaymentAmount   Float?
+  tenzilPaymentNote     String?
+  total           Float            @default(0)
+  amountPaid      Float            @default(0)
+  isPaid          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  createdByUserId Int?
+  payments        Payment[]        @relation("ReceiptDirectPayments")
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  driver          Driver?          @relation(fields: [driverId], references: [id])
+  jobSite         JobSite?         @relation(fields: [jobSiteId], references: [id])
+  truck           Truck?           @relation(fields: [truckId], references: [id])
+  items           ReceiptItem[]
+  receiptPayments ReceiptPayment[]
+  stockMoves      StockMovement[]
+  invoiceLinks    InvoiceReceipt[]
+  createdByUser   User?            @relation("ReceiptCreatedBy", fields: [createdByUserId], references: [id])
+}
+
+model ReceiptItem {
+  id              Int     @id @default(autoincrement())
+  receiptId       Int
+  productId       Int
+  quantity        Float
+  unitPrice       Float?
+  subtotal        Float?
+  displayQuantity Float?
+  displayUnit     String?
+  product         Product @relation(fields: [productId], references: [id])
+  receipt         Receipt @relation(fields: [receiptId], references: [id])
+  compositeUsages ReceiptItemComponent[]
+}
+
+model Payment {
+  id              Int              @id @default(autoincrement())
+  date            DateTime         @default(now())
+  amount          Float
+  type            PaymentType
+  description     String?
+  customerId      Int?
+  supplierId      Int?
+  receiptId       Int?
+  payrollRunId    Int?             @unique
+  category        String?
+  reference       String?
+  debrisRemoval   DebrisEntry?     @relation("DebrisRemovalPayment")
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  receipt         Receipt?         @relation("ReceiptDirectPayments", fields: [receiptId], references: [id])
+  supplier        Supplier?        @relation(fields: [supplierId], references: [id])
+  payrollEntry    PayrollEntry?    @relation("PaymentPayroll")
+  payrollRun      PayrollRun?      @relation("PayrollRunPayment", fields: [payrollRunId], references: [id])
+  receiptPayments ReceiptPayment[]
+  inventoryPayments InventoryPayment[]
+  truckRepair     TruckRepair?     @relation("TruckRepairPayment")
+}
+
+model JobSite {
+  id         Int       @id @default(autoincrement())
+  name       String
+  address    String?
+  notes      String?
+  customerId Int
+  createdAt  DateTime  @default(now())
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  receipts   Receipt[]
+  invoices   Invoice[]
+}
+
+model Supplier {
+  id                       Int              @id @default(autoincrement())
+  name                     String
+  contact                  String?
+  notes                    String?
+  createdAt                DateTime         @default(now())
+  manualBalanceNote        String?
+  manualBalanceOverride    Float?
+  manualBalanceUpdatedAt   DateTime?
+  manualBalanceUpdatedById Int?
+  entries                  InventoryEntry[]
+  payments                 Payment[]
+  manualBalanceUpdatedBy   User?            @relation("SupplierManualBalanceUser", fields: [manualBalanceUpdatedById], references: [id])
+  truckRepairs             TruckRepair[]
+  debrisentries            DebrisEntry[]
+  pairing                  CustomerSupplierLink?
+}
+
+model CustomerSupplierLink {
+  id          Int       @id @default(autoincrement())
+  customerId  Int       @unique
+  supplierId  Int       @unique
+  createdAt   DateTime  @default(now())
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+}
+
+model InventoryEntry {
+  id                Int                @id @default(autoincrement())
+  inventoryNo       String             @unique
+  createdAt         DateTime           @default(now())
+  entryDate         DateTime           @default(now())
+  type              InventoryEntryType
+  supplierId        Int?
+  productId         Int
+  quantity          Float
+  unitCost          Float?
+  totalCost         Float?
+  isPaid            Boolean            @default(true)
+  tvaEligible       Boolean            @default(false)
+  powderUsed        Float?
+  cementUsed        Float?
+  powderProductId   Int?
+  cementProductId   Int?
+  notes             String?
+  laborPaid         Boolean            @default(true)
+  laborPaidAt       DateTime?
+  laborAmount       Float?
+  helperLaborAmount Float?
+  workerEmployeeId  Int?
+  helperEmployeeId  Int?
+  productionSite    String?
+  amountPaid        Float              @default(0)
+  cementProduct     Product?           @relation("CementUsage", fields: [cementProductId], references: [id])
+  helperEmployee    Employee?          @relation("InventoryHelperEmployee", fields: [helperEmployeeId], references: [id])
+  powderProduct     Product?           @relation("PowderUsage", fields: [powderProductId], references: [id])
+  product           Product            @relation("InventoryEntryProduct", fields: [productId], references: [id])
+  supplier          Supplier?          @relation(fields: [supplierId], references: [id])
+  workerEmployee    Employee?          @relation("InventoryWorkerEmployee", fields: [workerEmployeeId], references: [id])
+  stockMoves        StockMovement[]
+  inventoryPayments InventoryPayment[]
+}
+
+enum TruckMaintenanceType {
+  REPAIR
+  OIL_CHANGE
+  INSURANCE
+}
+
+model TruckRepair {
+  id          Int                  @id @default(autoincrement())
+  truckId     Int
+  supplierId  Int?
+  paymentId   Int?                 @unique
+  date        DateTime             @default(now())
+  amount      Float
+  quantity    Float                @default(0)
+  toolId      Int?
+  description String?
+  type        TruckMaintenanceType @default(REPAIR)
+  createdAt   DateTime             @default(now())
+  payment     Payment?             @relation("TruckRepairPayment", fields: [paymentId], references: [id])
+  supplier    Supplier?            @relation(fields: [supplierId], references: [id])
+  tool        Tool?                @relation(fields: [toolId], references: [id])
+  truck       Truck                @relation(fields: [truckId], references: [id])
+}
+
+
+model InventoryPayment {
+  id               Int       @id @default(autoincrement())
+  paymentId        Int
+  inventoryEntryId Int
+  amount           Float
+  createdAt        DateTime  @default(now())
+  payment          Payment   @relation(fields: [paymentId], references: [id])
+  inventoryEntry   InventoryEntry @relation(fields: [inventoryEntryId], references: [id])
+
+  @@unique([paymentId, inventoryEntryId])
+}
+
+model Tool {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  quantity  Float    @default(0)
+  unit      String?
+  notes     String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  repairs   TruckRepair[]
+}
+
+model DisplaySettings {
+  id                Int      @id @default(1)
+  displayCash       Boolean  @default(true)
+  displayReceivables Boolean @default(true)
+  displayPayables   Boolean  @default(true)
+  includeReceipts   Boolean  @default(true)
+  includeSupplierPurchases Boolean @default(true)
+  includeManufacturing Boolean @default(true)
+  includePayroll    Boolean  @default(true)
+  includeDebris     Boolean  @default(true)
+  includeGeneralExpenses Boolean @default(true)
+  includeInventoryValue Boolean @default(true)
+  updatedAt         DateTime @updatedAt
+}
+
+model StockMovement {
+  id               Int               @id @default(autoincrement())
+  date             DateTime          @default(now())
+  type             StockMovementType
+  quantity         Float
+  productId        Int
+  receiptId        Int?
+  inventoryEntryId Int?
+  inventoryEntry   InventoryEntry?   @relation(fields: [inventoryEntryId], references: [id])
+  product          Product           @relation(fields: [productId], references: [id])
+  receipt          Receipt?          @relation(fields: [receiptId], references: [id])
+}
+
+model User {
+  id                             Int             @id @default(autoincrement())
+  name                           String?
+  email                          String          @unique
+  role                           UserRole        @default(MANAGER)
+  passwordHash                   String
+  createdAt                      DateTime        @default(now())
+  updatedAt                      DateTime        @updatedAt
+  permissions                    Json?
+  adminOverrides                 AdminOverride[]
+  cashEntries                    CashEntry[]
+  customerManualBalanceOverrides Customer[]      @relation("CustomerManualBalanceUser")
+  sessions                       Session[]
+  supplierManualBalanceOverrides Supplier[]      @relation("SupplierManualBalanceUser")
+  createdReceipts                Receipt[]       @relation("ReceiptCreatedBy")
+  cashCustodyEntries             CashCustodyEntry[] @relation("CashCustodyCreatedBy")
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+  lastUsedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model CashEntry {
+  id              Int           @id @default(autoincrement())
+  createdAt       DateTime      @default(now())
+  type            CashEntryType
+  amount          Float
+  description     String?
+  createdByUserId Int?
+  createdByUser   User?         @relation(fields: [createdByUserId], references: [id])
+}
+
+model CashCustodyEntry {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  type            CashCustodyType
+  amount          Float
+  description     String?
+  fromEmployeeId  Int
+  toEmployeeId    Int
+  createdByUserId Int?
+  fromEmployee    Employee          @relation("CashCustodyFrom", fields: [fromEmployeeId], references: [id])
+  toEmployee      Employee          @relation("CashCustodyTo", fields: [toEmployeeId], references: [id])
+  createdByUser   User?             @relation("CashCustodyCreatedBy", fields: [createdByUserId], references: [id])
+}
+
+model DebrisEntry {
+  id               Int          @id @default(autoincrement())
+  date             DateTime     @default(now())
+  customerId       Int?
+  supplierId       Int?
+  walkInName       String?
+  volume           Float
+  dumpingFee       Float?
+  removalCost      Float?
+  removalDate      DateTime?
+  status           DebrisStatus @default(PENDING)
+  notes            String?
+  removalPaymentId Int?         @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  customer         Customer?    @relation(fields: [customerId], references: [id])
+  supplier         Supplier?    @relation(fields: [supplierId], references: [id])
+  removalPayment   Payment?     @relation("DebrisRemovalPayment", fields: [removalPaymentId], references: [id])
+}
+
+model ReceiptPayment {
+  id        Int      @id @default(autoincrement())
+  paymentId Int
+  receiptId Int
+  amount    Float
+  createdAt DateTime @default(now())
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  receipt   Receipt  @relation(fields: [receiptId], references: [id])
+
+  @@unique([paymentId, receiptId])
+}
+
+model Invoice {
+  id             Int            @id @default(autoincrement())
+  invoiceNo      String?        @unique
+  customerId     Int
+  customer       Customer       @relation(fields: [customerId], references: [id])
+  jobSiteId      Int?
+  jobSite        JobSite?       @relation(fields: [jobSiteId], references: [id])
+  receiptType    ReceiptType
+  status         InvoiceStatus  @default(PENDING)
+  subtotal       Float
+  vatRate        Float?
+  vatAmount      Float?
+  total          Float
+  amountPaid     Float          @default(0)
+  outstanding    Float
+  notes          String?
+  issuedAt       DateTime       @default(now())
+  paidAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  invoiceReceipts InvoiceReceipt[]
+}
+
+model InvoiceReceipt {
+  id        Int      @id @default(autoincrement())
+  invoiceId Int
+  receiptId Int      @unique
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  receipt   Receipt  @relation(fields: [receiptId], references: [id])
+}
+
+model DieselLog {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  truckId       Int?
+  driverId      Int?
+  liters        Float
+  pricePerLiter Float?
+  totalCost     Float?
+  notes         String?
+  driver        Driver?  @relation(fields: [driverId], references: [id])
+  truck         Truck?   @relation(fields: [truckId], references: [id])
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  action      String
+  entityType  String
+  entityId    Int?
+  description String?
+  user        String?
+  metadata    Json?
+}
+
+model AdminOverride {
+  id              Int                   @id @default(autoincrement())
+  category        AdminOverrideCategory @unique
+  value           Float
+  notes           String?
+  updatedAt       DateTime              @updatedAt
+  updatedByUserId Int?
+  updatedByUser   User?                 @relation(fields: [updatedByUserId], references: [id])
+}
+
+model Employee {
+  id                      Int              @id @default(autoincrement())
+  name                    String
+  role                    EmployeeRole
+  payType                 PayrollType
+  salaryAmount            Float?
+  salaryFrequency         PayFrequency?
+  active                  Boolean          @default(true)
+  phone                   String?
+  notes                   String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  helperProductionEntries InventoryEntry[] @relation("InventoryHelperEmployee")
+  workerProductionEntries InventoryEntry[] @relation("InventoryWorkerEmployee")
+  payrollEntries          PayrollEntry[]
+  helperPayrolls          PayrollEntry[]   @relation("PayrollHelper")
+  cashCustodySent         CashCustodyEntry[] @relation("CashCustodyFrom")
+  cashCustodyReceived     CashCustodyEntry[] @relation("CashCustodyTo")
+  pieceRates              ManufacturingPieceRate[]
+}
+
+model ManufacturingPieceRate {
+  id         Int       @id @default(autoincrement())
+  employeeId Int
+  productId  Int
+  rate       Float
+  helperRate Float?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  product    Product   @relation(fields: [productId], references: [id])
+
+  @@unique([employeeId, productId])
+}
+
+model PayrollEntry {
+  id               Int         @id @default(autoincrement())
+  employeeId       Int
+  periodStart      DateTime
+  periodEnd        DateTime
+  type             PayrollType
+  amount           Float
+  quantity         Float?
+  notes            String?
+  paymentId        Int?        @unique
+  payrollRunId     Int?
+  createdAt        DateTime    @default(now())
+  stoneProductId   Int?
+  helperEmployeeId Int?
+  employee         Employee    @relation(fields: [employeeId], references: [id])
+  helperEmployee   Employee?   @relation("PayrollHelper", fields: [helperEmployeeId], references: [id])
+  payment          Payment?    @relation("PaymentPayroll", fields: [paymentId], references: [id])
+  payrollRun       PayrollRun? @relation(fields: [payrollRunId], references: [id], onDelete: SetNull)
+  stoneProduct     Product?    @relation("PayrollEntry_stoneProduct", fields: [stoneProductId], references: [id])
+}
+
+model PayrollRun {
+  id             Int                @id @default(autoincrement())
+  frequency      PayFrequency
+  status         PayrollRunStatus   @default(DRAFT)
+  periodStart    DateTime
+  periodEnd      DateTime
+  debitAt        DateTime?
+  paidAt         DateTime?
+  totalGross     Float              @default(0)
+  totalNet       Float              @default(0)
+  totalDeductions Float             @default(0)
+  notes          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  entries        PayrollEntry[]
+  payment        Payment?           @relation("PayrollRunPayment")
+}
+
+enum ReceiptType {
+  NORMAL
+  TVA
+}
+
+enum InventoryEntryType {
+  PURCHASE
+  PRODUCTION
+}
+
+enum StockMovementType {
+  PURCHASE
+  SALE
+  PRODUCTION_OUTPUT
+  PRODUCTION_CONSUMPTION
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  WORKER
+}
+
+enum CashEntryType {
+  DEPOSIT
+  WITHDRAW
+  OWNER_DRAW
+}
+
+enum CashCustodyType {
+  HANDOFF
+  RETURN
+}
+
+enum DebrisStatus {
+  PENDING
+  REMOVED
+}
+
+enum PaymentType {
+  GENERAL_EXPENSE
+  SUPPLIER
+  RECEIPT
+  PAYROLL_SALARY
+  PAYROLL_PIECEWORK
+  PAYROLL_RUN
+  CUSTOMER_PAYMENT
+  DEBRIS_REMOVAL
+  OWNER_DRAW
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum AdminOverrideCategory {
+  INVENTORY_VALUE
+  RECEIVABLES_TOTAL
+  PAYABLES_TOTAL
+}
+
+enum EmployeeRole {
+  DRIVER
+  ACCOUNTANT
+  MANAGER
+  MANUFACTURING
+  OTHER
+}
+
+enum PayrollType {
+  SALARY
+  PIECEWORK
+}
+
+enum PayFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  FINALIZED
+  PAID
+  CANCELLED
+}
+model ProductComponent {
+  id                 Int     @id @default(autoincrement())
+  parentProductId    Int
+  componentProductId Int
+  quantity           Float
+  parentProduct      Product @relation("CompositeParent", fields: [parentProductId], references: [id], onDelete: Cascade)
+  componentProduct   Product @relation("CompositeComponent", fields: [componentProductId], references: [id])
+
+  @@unique([parentProductId, componentProductId])
+}
+
+model ReceiptItemComponent {
+  id                 Int      @id @default(autoincrement())
+  receiptItemId      Int
+  componentProductId Int
+  quantity           Float
+  receiptItem        ReceiptItem @relation(fields: [receiptItemId], references: [id], onDelete: Cascade)
+  componentProduct   Product @relation(fields: [componentProductId], references: [id])
+
+  @@index([receiptItemId])
+}

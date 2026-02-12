@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS "DisplaySettings" (
+    "id" INTEGER PRIMARY KEY DEFAULT 1,
+    "displayCash" BOOLEAN NOT NULL DEFAULT TRUE,
+    "displayReceivables" BOOLEAN NOT NULL DEFAULT TRUE,
+    "displayPayables" BOOLEAN NOT NULL DEFAULT TRUE,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO "DisplaySettings" ("id")
+VALUES (1)
+ON CONFLICT ("id") DO NOTHING;

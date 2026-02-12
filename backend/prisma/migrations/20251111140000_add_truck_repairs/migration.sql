@@ -1,0 +1,1 @@
+-- no-op: schema captured in baseline
