@@ -2269,7 +2269,7 @@ router.get("/custom", async (req, res) => {
         }
         const bucket = groups.get(key)!;
         const paidFromAllocations = (receipt.receiptPayments ?? []).reduce(
-          (sum, link) => sum + Number(link.amount ?? 0),
+          (sum: number, link: { amount?: number | null }) => sum + Number(link.amount ?? 0),
           0,
         );
         const paid = Math.max(Number(receipt.amountPaid ?? 0), paidFromAllocations);
@@ -2381,7 +2381,7 @@ router.get("/custom", async (req, res) => {
         let label: string | undefined;
         if (aggregateBy === "customer") {
           key = String(payment.customerId ?? payment.receipt?.customerId ?? payment.customer?.name ?? "customer");
-          label = payment.customer?.name ?? payment.receipt?.customer?.name ?? "Customer";
+          label = payment.customer?.name ?? "Customer";
         } else if (aggregateBy === "supplier") {
           key = String(payment.supplierId ?? payment.supplier?.name ?? "supplier");
           label = payment.supplier?.name ?? "Supplier";

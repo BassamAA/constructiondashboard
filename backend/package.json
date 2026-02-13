@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "seed:bulk": "ts-node prisma/seedLargeDataset.ts",
     "test": "vitest run",
+    "test:ci": "vitest run",
     "test:watch": "vitest"
   },
   "keywords": [],

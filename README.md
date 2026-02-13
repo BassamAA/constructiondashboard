@@ -16,3 +16,30 @@ Templates are provided so secrets do not get committed:
 - `frontend/.env.example`
 
 Copy them to `.env` locally and fill in real values. Do not commit `.env` files.
+
+## Backend integration tests
+
+The backend test suite uses `Vitest` + `Supertest` and targets a separate PostgreSQL database.
+This keeps API tests isolated from development data.
+
+Run tests locally:
+
+```bash
+cd backend
+npm test
+```
+
+Environment variables used by tests:
+
+- `DATABASE_URL_TEST` - connection string for the test database
+- `TEST_DB_MIGRATE` - when `true` (default), applies migrations before tests
+- `TEST_DB_TEARDOWN` - when `true`, truncates test tables after tests (enabled in CI)
+
+Test run flow:
+
+1. `backend/tests/global.setup.ts` loads `.env.test` and runs `prisma migrate deploy`.
+2. `Vitest` executes the API integration tests.
+3. `backend/tests/global.teardown.ts` clears test data while keeping Prisma migration history.
+
+A GitHub Actions workflow is included at `.github/workflows/backend-api-tests.yml` and
+starts a temporary PostgreSQL service for CI runs.
