@@ -56,7 +56,14 @@ For `production`, add required reviewers to enforce manual approval before deplo
 - Push to `main`: CI + build + deploy to staging.
 - Manual workflow dispatch (`target_env=prod`): deploy to production (approval gate via environment).
 
-## 7) Local Terraform usage
+## 7) Security checks
+
+Workflow: `.github/workflows/security-checks.yml`
+
+- Trivy filesystem scan (HIGH/CRITICAL, ignores unfixed)
+- Gitleaks secret scan
+
+## 8) Local Terraform usage
 
 Examples are in:
 

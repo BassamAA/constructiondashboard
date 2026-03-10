@@ -51,6 +51,7 @@ The repository includes AWS deployment automation:
 - Terraform stack in `infrastructure/terraform/`
 - Multi-environment tfvars under `infrastructure/terraform/environments/`
 - Deployment workflow at `.github/workflows/deploy-aws.yml`
+- Security workflow at `.github/workflows/security-checks.yml` (Trivy + Gitleaks)
 
 Default deployment behavior:
 
