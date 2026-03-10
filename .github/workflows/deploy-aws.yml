@@ -25,6 +25,7 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  TF_STATE_REGION: ${{ vars.TF_STATE_REGION }}
 
 permissions:
   contents: read
@@ -176,10 +177,14 @@ jobs:
 
       - name: Terraform Init (remote state)
         run: |
+          if [ -z "${TF_STATE_REGION}" ]; then
+            echo "TF_STATE_REGION must be set as a GitHub repository variable."
+            exit 1
+          fi
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="key=construction-dashboard/staging/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ env.TF_STATE_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
@@ -216,10 +221,14 @@ jobs:
 
       - name: Terraform Init (remote state)
         run: |
+          if [ -z "${TF_STATE_REGION}" ]; then
+            echo "TF_STATE_REGION must be set as a GitHub repository variable."
+            exit 1
+          fi
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="key=construction-dashboard/prod/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ env.TF_STATE_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
