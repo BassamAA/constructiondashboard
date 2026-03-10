@@ -43,3 +43,18 @@ Test run flow:
 
 A GitHub Actions workflow is included at `.github/workflows/backend-api-tests.yml` and
 starts a temporary PostgreSQL service for CI runs.
+
+## AWS CI/CD and IaC
+
+The repository includes AWS deployment automation:
+
+- Terraform stack in `infrastructure/terraform/`
+- Multi-environment tfvars under `infrastructure/terraform/environments/`
+- Deployment workflow at `.github/workflows/deploy-aws.yml`
+
+Default deployment behavior:
+
+- Push to `main` deploys to `staging`
+- Manual dispatch can deploy to `prod` (configure GitHub Environment approvals)
+
+Setup checklist: `docs/devops-setup.md`
