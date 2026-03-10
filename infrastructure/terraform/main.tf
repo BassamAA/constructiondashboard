@@ -169,7 +169,7 @@ resource "aws_db_instance" "main" {
 }
 
 locals {
-  database_url = "postgresql://${var.rds_username}:${random_password.db_password.result}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.rds_database_name}?schema=public"
+  database_url = "postgresql://${urlencode(var.rds_username)}:${urlencode(random_password.db_password.result)}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.rds_database_name}?schema=public"
 }
 
 resource "aws_secretsmanager_secret" "database_url" {
