@@ -74,4 +74,4 @@ COPY backend/prisma ./prisma
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD ["sh", "-c", "node scripts/run-migrations.js && npm run start"]
+CMD ["sh", "-c", "for i in $(seq 1 30); do node scripts/run-migrations.js && break; echo \"Migration attempt $i failed; retrying in 10s...\"; sleep 10; done; node dist/server.js"]
