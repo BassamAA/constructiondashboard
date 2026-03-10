@@ -88,9 +88,10 @@ variable "rds_username" {
 }
 
 variable "rds_engine_version" {
-  description = "PostgreSQL engine version"
+  description = "Optional PostgreSQL engine version (set null to let AWS choose a valid default for the region)"
   type        = string
-  default     = "16.3"
+  default     = null
+  nullable    = true
 }
 
 variable "db_backup_retention_days" {

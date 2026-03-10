@@ -31,6 +31,7 @@ Set repository secret:
 ## 3) Configure GitHub repository variables
 
 - `AWS_REGION`
+- `TF_STATE_REGION`
 - `ECR_REPOSITORY`
 - `VITE_API_BASE`
 

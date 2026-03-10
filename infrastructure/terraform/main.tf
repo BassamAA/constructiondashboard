@@ -1,5 +1,7 @@
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
+  # App Runner autoscaling names must be <= 32 chars.
+  apprunner_autoscaling_name = substr("${var.project_name}-${var.environment}-as", 0, 32)
   common_tags = {
     Project     = var.project_name
     Environment = var.environment
@@ -138,30 +140,30 @@ resource "random_password" "db_password" {
 }
 
 resource "aws_db_instance" "main" {
-  identifier                            = "${var.project_name}-${var.environment}-db"
-  engine                                = "postgres"
-  engine_version                        = var.rds_engine_version
-  instance_class                        = var.rds_instance_class
-  allocated_storage                     = var.rds_allocated_storage
-  max_allocated_storage                 = var.rds_max_allocated_storage
-  db_name                               = var.rds_database_name
-  username                              = var.rds_username
-  password                              = random_password.db_password.result
-  db_subnet_group_name                  = aws_db_subnet_group.main.name
-  vpc_security_group_ids                = [aws_security_group.rds.id]
-  port                                  = 5432
-  publicly_accessible                   = false
-  multi_az                              = var.db_multi_az
-  backup_retention_period               = var.db_backup_retention_days
-  deletion_protection                   = true
-  storage_encrypted                     = true
-  performance_insights_enabled          = true
-  enabled_cloudwatch_logs_exports       = ["postgresql", "upgrade"]
-  auto_minor_version_upgrade            = true
-  copy_tags_to_snapshot                 = true
-  skip_final_snapshot                   = false
-  final_snapshot_identifier             = "${var.project_name}-${var.environment}-final-${formatdate("YYYYMMDDhhmmss", timestamp())}"
-  apply_immediately                     = false
+  identifier                      = "${var.project_name}-${var.environment}-db"
+  engine                          = "postgres"
+  engine_version                  = var.rds_engine_version
+  instance_class                  = var.rds_instance_class
+  allocated_storage               = var.rds_allocated_storage
+  max_allocated_storage           = var.rds_max_allocated_storage
+  db_name                         = var.rds_database_name
+  username                        = var.rds_username
+  password                        = random_password.db_password.result
+  db_subnet_group_name            = aws_db_subnet_group.main.name
+  vpc_security_group_ids          = [aws_security_group.rds.id]
+  port                            = 5432
+  publicly_accessible             = false
+  multi_az                        = var.db_multi_az
+  backup_retention_period         = var.db_backup_retention_days
+  deletion_protection             = true
+  storage_encrypted               = true
+  performance_insights_enabled    = true
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  auto_minor_version_upgrade      = true
+  copy_tags_to_snapshot           = true
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "${var.project_name}-${var.environment}-final-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  apply_immediately               = false
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-db" })
 }
@@ -197,9 +199,9 @@ resource "aws_iam_role" "apprunner_ecr_access" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "build.apprunner.amazonaws.com" },
-      Action = "sts:AssumeRole",
+      Action    = "sts:AssumeRole",
     }],
   })
   tags = local.common_tags
@@ -215,9 +217,9 @@ resource "aws_iam_role" "apprunner_instance" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "tasks.apprunner.amazonaws.com" },
-      Action = "sts:AssumeRole",
+      Action    = "sts:AssumeRole",
     }],
   })
   tags = local.common_tags
@@ -245,7 +247,7 @@ resource "aws_iam_role_policy" "apprunner_instance_secrets" {
 }
 
 resource "aws_apprunner_auto_scaling_configuration_version" "main" {
-  auto_scaling_configuration_name = "${local.name_prefix}-autoscaling"
+  auto_scaling_configuration_name = local.apprunner_autoscaling_name
   min_size                        = var.apprunner_min_size
   max_size                        = var.apprunner_max_size
   max_concurrency                 = var.apprunner_max_concurrency

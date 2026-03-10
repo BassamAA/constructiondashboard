@@ -6,7 +6,7 @@ This guide bootstraps AWS/GitHub prerequisites for CI/CD.
 
 ```bash
 export AWS_REGION="us-east-1"
-export AWS_ACCOUNT_ID="123456789012"
+export AWS_ACCOUNT_ID="385502454961"
 export TF_STATE_BUCKET="construction-dashboard-tf-state"
 export TF_LOCK_TABLE="construction-dashboard-tf-lock"
 export ROLE_NAME="github-actions-construction-dashboard"
@@ -88,6 +88,7 @@ aws iam attach-role-policy \
 ## 5) Configure GitHub repository variables
 
 - `AWS_REGION`
+- `TF_STATE_REGION`
 - `ECR_REPOSITORY`
 - `VITE_API_BASE`
 
