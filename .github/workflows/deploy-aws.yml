@@ -2,7 +2,9 @@ name: Build and Deploy AWS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - feat/aws-ops-revamp
     paths:
       - "backend/**"
       - "frontend/**"
