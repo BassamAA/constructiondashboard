@@ -54,6 +54,7 @@ jobs:
         working-directory: backend
 
     env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/construction_test?schema=public
       DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/construction_test?schema=public
       TEST_DB_MIGRATE: "true"
       TEST_DB_TEARDOWN: "true"
