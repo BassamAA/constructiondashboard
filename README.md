@@ -58,3 +58,4 @@ Default deployment behavior:
 - Manual dispatch can deploy to `prod` (configure GitHub Environment approvals)
 
 Setup checklist: `docs/devops-setup.md`
+AWS bootstrap guide: `docs/aws-bootstrap.md`

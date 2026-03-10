@@ -1,6 +1,7 @@
 # DevOps Setup Checklist (AWS)
 
 This project now includes an AWS deployment workflow at `.github/workflows/deploy-aws.yml`.
+For first-time AWS account/bootstrap steps, use `docs/aws-bootstrap.md`.
 
 ## 1) Create Terraform state backend
 
@@ -17,6 +18,11 @@ Create an IAM role trusted by GitHub OIDC, then grant it permissions for:
 - App Runner (update service)
 - RDS, VPC, IAM, Secrets Manager, CloudWatch (Terraform-managed resources)
 - S3 + DynamoDB (Terraform backend state/lock)
+
+Templates are provided in:
+
+- `infrastructure/iam/github-oidc-trust-policy.json`
+- `infrastructure/iam/github-actions-ci-policy.json`
 
 Set repository secret:
 
