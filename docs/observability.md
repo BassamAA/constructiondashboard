@@ -58,3 +58,5 @@ Current delivery path:
 - synthetic uptime checks
 
 Those are the next logical observability upgrades.
+
+For disposable staging lifecycle notes, see `docs/ephemeral-staging.md`.

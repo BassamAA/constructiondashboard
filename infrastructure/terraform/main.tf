@@ -2,6 +2,7 @@ locals {
   name_prefix = "${var.project_name}-${var.environment}"
   # App Runner autoscaling names must be <= 32 chars.
   apprunner_autoscaling_name = substr("${var.project_name}-${var.environment}-as", 0, 32)
+  is_ephemeral_environment   = contains(["dev", "staging"], var.environment)
   common_tags = {
     Project     = var.project_name
     Environment = var.environment
@@ -155,14 +156,14 @@ resource "aws_db_instance" "main" {
   publicly_accessible             = false
   multi_az                        = var.db_multi_az
   backup_retention_period         = var.db_backup_retention_days
-  deletion_protection             = true
+  deletion_protection             = local.is_ephemeral_environment ? false : true
   storage_encrypted               = true
   performance_insights_enabled    = true
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
   auto_minor_version_upgrade      = true
   copy_tags_to_snapshot           = true
-  skip_final_snapshot             = false
-  final_snapshot_identifier       = "${var.project_name}-${var.environment}-final-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  skip_final_snapshot             = local.is_ephemeral_environment ? true : false
+  final_snapshot_identifier       = local.is_ephemeral_environment ? null : "${var.project_name}-${var.environment}-final-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   apply_immediately               = false
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-db" })
