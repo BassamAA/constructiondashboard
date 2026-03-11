@@ -17,3 +17,8 @@ output "admin_bootstrap_token_secret_arn" {
   description = "Secrets Manager ARN for admin bootstrap token"
   value       = aws_secretsmanager_secret.admin_bootstrap_token.arn
 }
+
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch dashboard for application and database operations"
+  value       = aws_cloudwatch_dashboard.operations.dashboard_name
+}

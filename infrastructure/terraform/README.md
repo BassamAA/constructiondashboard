@@ -9,7 +9,8 @@ This Terraform stack provisions AWS infrastructure for the monorepo:
 - Security groups with least-privilege DB ingress
 - Secrets Manager for `DATABASE_URL` and `ADMIN_BOOTSTRAP_TOKEN`
 - IAM roles for App Runner build/runtime
-- CloudWatch alarms for RDS CPU and storage
+- CloudWatch alarms for App Runner and RDS
+- CloudWatch dashboard for app and database operations
 
 ## Environment Layout
 

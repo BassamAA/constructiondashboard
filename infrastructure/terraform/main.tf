@@ -361,3 +361,130 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage_low" {
   alarm_description = "RDS free storage below 5 GB"
   tags              = local.common_tags
 }
+
+resource "aws_cloudwatch_metric_alarm" "apprunner_cpu_high" {
+  alarm_name          = "${local.name_prefix}-apprunner-cpu-high"
+  namespace           = "AWS/AppRunner"
+  metric_name         = "CPUUtilization"
+  statistic           = "Average"
+  period              = 300
+  evaluation_periods  = 2
+  threshold           = 80
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "missing"
+
+  dimensions = {
+    ServiceName = aws_apprunner_service.main.service_name
+    ServiceId   = aws_apprunner_service.main.service_id
+  }
+
+  alarm_description = "App Runner CPU is above 80 percent"
+  tags              = local.common_tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "apprunner_memory_high" {
+  alarm_name          = "${local.name_prefix}-apprunner-memory-high"
+  namespace           = "AWS/AppRunner"
+  metric_name         = "MemoryUtilization"
+  statistic           = "Average"
+  period              = 300
+  evaluation_periods  = 2
+  threshold           = 80
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "missing"
+
+  dimensions = {
+    ServiceName = aws_apprunner_service.main.service_name
+    ServiceId   = aws_apprunner_service.main.service_id
+  }
+
+  alarm_description = "App Runner memory is above 80 percent"
+  tags              = local.common_tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "apprunner_5xx_high" {
+  alarm_name          = "${local.name_prefix}-apprunner-5xx-high"
+  namespace           = "AWS/AppRunner"
+  metric_name         = "HTTPCode5XX"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 5
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    ServiceName = aws_apprunner_service.main.service_name
+    ServiceId   = aws_apprunner_service.main.service_id
+  }
+
+  alarm_description = "App Runner is returning 5xx responses"
+  tags              = local.common_tags
+}
+
+resource "aws_cloudwatch_dashboard" "operations" {
+  dashboard_name = "${local.name_prefix}-operations"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          title   = "App Runner CPU and Memory"
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          metrics = [
+            ["AWS/AppRunner", "CPUUtilization", "ServiceName", aws_apprunner_service.main.service_name, "ServiceId", aws_apprunner_service.main.service_id],
+            [".", "MemoryUtilization", ".", ".", ".", "."],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          title   = "App Runner Requests and 5XX"
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          metrics = [
+            ["AWS/AppRunner", "RequestCount", "ServiceName", aws_apprunner_service.main.service_name, "ServiceId", aws_apprunner_service.main.service_id],
+            [".", "HTTPCode5XX", ".", ".", ".", "."],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          title   = "RDS CPU"
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          metrics = [
+            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main.id],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          title   = "RDS Free Storage"
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          metrics = [
+            ["AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", aws_db_instance.main.id],
+          ]
+        }
+      },
+    ]
+  })
+}

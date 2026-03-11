@@ -74,3 +74,4 @@ Examples are in:
 
 - `docs/rollback-runbook.md`
 - `docs/fly-to-aws-db-migration.md`
+- `docs/observability.md`
