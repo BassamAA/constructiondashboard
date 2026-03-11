@@ -64,3 +64,23 @@ Rollback runbook: `docs/rollback-runbook.md`
 Fly migration runbook: `docs/fly-to-aws-db-migration.md`
 Observability guide: `docs/observability.md`
 Ephemeral staging guide: `docs/ephemeral-staging.md`
+
+## Ephemeral Staging Commands
+
+Bring staging up from the repo root:
+
+```bash
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform init -reconfigure -backend-config=backends/staging.hcl
+
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform apply \
+  -var-file=environments/staging.tfvars \
+  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-2acfeb38ae28"
+```
+
+Tear staging down from the repo root:
+
+```bash
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform destroy \
+  -var-file=environments/staging.tfvars \
+  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-2acfeb38ae28"
+```

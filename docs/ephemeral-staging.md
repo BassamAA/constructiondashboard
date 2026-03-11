@@ -12,11 +12,9 @@ This keeps AWS costs under control and allows one-command tear down and re-creat
 ## Bring staging up
 
 ```bash
-cd infrastructure/terraform
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform init -reconfigure -backend-config=backends/staging.hcl
 
-terraform init -reconfigure -backend-config=backends/staging.hcl
-
-terraform apply \
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform apply \
   -var-file=environments/staging.tfvars \
   -var="ecr_image_identifier=<account>.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-<tag>"
 ```
@@ -24,9 +22,7 @@ terraform apply \
 ## Tear staging down
 
 ```bash
-cd infrastructure/terraform
-
-terraform destroy \
+terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform destroy \
   -var-file=environments/staging.tfvars \
   -var="ecr_image_identifier=<account>.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-<tag>"
 ```
