@@ -1,16 +1,16 @@
-aws_region            = "us-east-1"
-project_name          = "construction-dashboard"
-environment           = "prod"
+aws_region   = "us-east-1"
+project_name = "construction-dashboard"
+environment  = "prod"
 
 # Replace with your ECR image tag from CI/CD
-# Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/construction-dashboard:sha-abc123
-ecr_image_identifier  = "<account>.dkr.ecr.<region>.amazonaws.com/construction-dashboard:<tag>"
+# Example: 123456789012.dkr.ecr.<region>.amazonaws.com/construction-dashboard:sha-abc123
+ecr_image_identifier = "<account>.dkr.ecr.<region>.amazonaws.com/construction-dashboard:<tag>"
 
 cors_origin           = "https://app.example.com"
 admin_bootstrap_token = "replace-me-with-secure-random-token"
 
 # Optional overrides
-# db_multi_az             = true
-# apprunner_min_size      = 1
-# apprunner_max_size      = 4
-# apprunner_max_concurrency = 80
+# db_multi_az                = true
+# apprunner_min_size         = 1
+# apprunner_max_size         = 4
+# apprunner_max_concurrency  = 80
