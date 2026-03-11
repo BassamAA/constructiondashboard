@@ -1,0 +1,5 @@
+bucket         = "your-tf-state-bucket"
+key            = "construction-dashboard/prod/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "your-tf-lock-table"
+encrypt        = true

@@ -1,0 +1,67 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ECRPushPull",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeRepositories",
+        "ecr:CreateRepository",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformStateS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::<TF_STATE_BUCKET>",
+        "arn:aws:s3:::<TF_STATE_BUCKET>/*"
+      ]
+    },
+    {
+      "Sid": "TerraformStateLockDynamoDB",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:<AWS_REGION>:<AWS_ACCOUNT_ID>:table/<TF_LOCK_TABLE>"
+    },
+    {
+      "Sid": "TerraformManagedInfra",
+      "Effect": "Allow",
+      "Action": [
+        "apprunner:*",
+        "ec2:*",
+        "rds:*",
+        "iam:*",
+        "secretsmanager:*",
+        "cloudwatch:*",
+        "logs:*",
+        "tag:GetResources",
+        "tag:TagResources",
+        "tag:UntagResources",
+        "kms:DescribeKey",
+        "kms:ListAliases",
+        "kms:CreateGrant"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
