@@ -60,3 +60,5 @@ Default deployment behavior:
 
 Setup checklist: `docs/devops-setup.md`
 AWS bootstrap guide: `docs/aws-bootstrap.md`
+Rollback runbook: `docs/rollback-runbook.md`
+Fly migration runbook: `docs/fly-to-aws-db-migration.md`
