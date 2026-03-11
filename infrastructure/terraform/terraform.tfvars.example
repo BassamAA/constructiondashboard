@@ -8,6 +8,9 @@ ecr_image_identifier = "<account>.dkr.ecr.<region>.amazonaws.com/construction-da
 
 cors_origin           = "https://app.example.com"
 admin_bootstrap_token = "replace-me-with-secure-random-token"
+alert_email_subscriptions = [
+  "ops@example.com",
+]
 
 # Optional overrides
 # db_multi_az                = true

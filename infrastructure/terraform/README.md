@@ -11,6 +11,7 @@ This Terraform stack provisions AWS infrastructure for the monorepo:
 - IAM roles for App Runner build/runtime
 - CloudWatch alarms for App Runner and RDS
 - CloudWatch dashboard for app and database operations
+- Optional SNS email delivery for alarms
 
 ## Environment Layout
 

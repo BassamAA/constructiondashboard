@@ -324,6 +324,20 @@ resource "aws_apprunner_service" "main" {
   tags = local.common_tags
 }
 
+resource "aws_sns_topic" "alarm_notifications" {
+  count = length(var.alert_email_subscriptions) > 0 ? 1 : 0
+  name  = "${local.name_prefix}-alerts"
+  tags  = local.common_tags
+}
+
+resource "aws_sns_topic_subscription" "alarm_email" {
+  for_each = length(var.alert_email_subscriptions) > 0 ? toset(var.alert_email_subscriptions) : toset([])
+
+  topic_arn = aws_sns_topic.alarm_notifications[0].arn
+  protocol  = "email"
+  endpoint  = each.value
+}
+
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   alarm_name          = "${local.name_prefix}-rds-cpu-high"
   namespace           = "AWS/RDS"
@@ -338,6 +352,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.main.id
   }
+
+  alarm_actions = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+  ok_actions    = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
 
   alarm_description = "RDS CPU is above 80 percent"
   tags              = local.common_tags
@@ -357,6 +374,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage_low" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.main.id
   }
+
+  alarm_actions = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+  ok_actions    = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
 
   alarm_description = "RDS free storage below 5 GB"
   tags              = local.common_tags
@@ -378,6 +398,9 @@ resource "aws_cloudwatch_metric_alarm" "apprunner_cpu_high" {
     ServiceId   = aws_apprunner_service.main.service_id
   }
 
+  alarm_actions = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+  ok_actions    = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+
   alarm_description = "App Runner CPU is above 80 percent"
   tags              = local.common_tags
 }
@@ -398,6 +421,9 @@ resource "aws_cloudwatch_metric_alarm" "apprunner_memory_high" {
     ServiceId   = aws_apprunner_service.main.service_id
   }
 
+  alarm_actions = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+  ok_actions    = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+
   alarm_description = "App Runner memory is above 80 percent"
   tags              = local.common_tags
 }
@@ -417,6 +443,9 @@ resource "aws_cloudwatch_metric_alarm" "apprunner_5xx_high" {
     ServiceName = aws_apprunner_service.main.service_name
     ServiceId   = aws_apprunner_service.main.service_id
   }
+
+  alarm_actions = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
+  ok_actions    = length(var.alert_email_subscriptions) > 0 ? [aws_sns_topic.alarm_notifications[0].arn] : []
 
   alarm_description = "App Runner is returning 5xx responses"
   tags              = local.common_tags

@@ -140,3 +140,9 @@ variable "admin_bootstrap_token" {
   type        = string
   sensitive   = true
 }
+
+variable "alert_email_subscriptions" {
+  description = "Email addresses subscribed to CloudWatch alarm notifications via SNS"
+  type        = list(string)
+  default     = []
+}

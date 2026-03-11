@@ -14,6 +14,7 @@ This project includes baseline operational visibility for the application and da
 
 - CloudWatch alarms for App Runner and RDS
 - CloudWatch dashboard for service and database metrics
+- Optional SNS topic and email subscriptions for alarm delivery
 
 These are managed in:
 
@@ -23,6 +24,7 @@ These are managed in:
 ## How to use it
 
 After Terraform apply, open the CloudWatch dashboard shown in Terraform outputs.
+If `alert_email_subscriptions` is configured, confirm the SNS subscription emails before expecting alerts.
 
 Use the dashboard during:
 
@@ -38,9 +40,19 @@ Use the dashboard during:
 - RDS CPU > 80% for 10 minutes
 - RDS free storage < 5 GB
 
+## Alert delivery
+
+Set `alert_email_subscriptions` in Terraform to create an SNS topic and subscribe email recipients.
+
+Current delivery path:
+
+- CloudWatch alarm
+- SNS topic
+- email subscription
+
 ## What this does not cover yet
 
-- alert routing to SNS, Slack, or email
+- Slack or PagerDuty routing
 - distributed tracing
 - structured log aggregation outside CloudWatch
 - synthetic uptime checks

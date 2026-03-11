@@ -22,3 +22,8 @@ output "cloudwatch_dashboard_name" {
   description = "CloudWatch dashboard for application and database operations"
   value       = aws_cloudwatch_dashboard.operations.dashboard_name
 }
+
+output "alarm_sns_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications"
+  value       = try(aws_sns_topic.alarm_notifications[0].arn, null)
+}
