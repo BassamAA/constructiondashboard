@@ -64,6 +64,8 @@ Rollback runbook: `docs/rollback-runbook.md`
 Fly migration runbook: `docs/fly-to-aws-db-migration.md`
 Observability guide: `docs/observability.md`
 Ephemeral staging guide: `docs/ephemeral-staging.md`
+Architecture decision: `docs/architecture-decision.md`
+Cost and platform tradeoffs: `docs/cost-and-platform-tradeoffs.md`
 
 ## Ephemeral Staging Commands
 
