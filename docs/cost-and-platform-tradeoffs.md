@@ -3,11 +3,11 @@
 ## Current platform split
 
 - Fly: production
-- AWS: disposable staging
+- AWS: migration-ready staging
 
 ## Why not move production to AWS now
 
-The AWS staging stack is stronger from a DevOps portfolio perspective, but it is not automatically the right production choice for this application today.
+The AWS staging stack is a stronger cloud operating model for future scale, but it is not automatically the right production choice for this application today.
 
 Reasons:
 
@@ -28,7 +28,7 @@ The NAT gateway is a major fixed cost even with low traffic.
 ## Why disposable staging is the right compromise
 
 - keeps AWS costs temporary instead of permanent
-- preserves a strong DevOps showcase environment
+- preserves a migration-ready AWS environment without committing production traffic
 - allows repeated bring-up and tear-down for demos and learning
 - avoids committing live users to a more expensive platform prematurely
 
@@ -42,5 +42,5 @@ The NAT gateway is a major fixed cost even with low traffic.
 ## Current recommendation
 
 - keep Fly as production
-- use AWS for staging and DevOps demonstration
+- use AWS for staging and future scale evaluation
 - only revisit migration after a cost, reliability, and operational review

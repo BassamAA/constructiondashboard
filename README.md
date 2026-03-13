@@ -44,6 +44,27 @@ Test run flow:
 A GitHub Actions workflow is included at `.github/workflows/backend-api-tests.yml` and
 starts a temporary PostgreSQL service for CI runs.
 
+## Architecture Diagram
+
+```mermaid
+flowchart LR
+    User[Users] --> Fly[Fly Production App]
+    Fly --> FlyDB[(Fly Postgres)]
+
+    Engineer[Engineer / GitHub Actions] --> GH[GitHub Actions CI/CD]
+    GH --> ECR[Amazon ECR]
+    GH --> TF[Terraform]
+
+    TF --> AR[App Runner Staging]
+    TF --> RDS[(RDS PostgreSQL)]
+    TF --> CW[CloudWatch]
+    TF --> SNS[SNS Email Alerts]
+
+    LocalFE[Local Frontend] -->|CORS| AR
+    AR --> RDS
+    CW --> SNS
+```
+
 ## AWS CI/CD and IaC
 
 The repository includes AWS deployment automation:
@@ -66,6 +87,19 @@ Observability guide: `docs/observability.md`
 Ephemeral staging guide: `docs/ephemeral-staging.md`
 Architecture decision: `docs/architecture-decision.md`
 Cost and platform tradeoffs: `docs/cost-and-platform-tradeoffs.md`
+
+## Deployment Flow
+
+```mermaid
+flowchart TD
+    Commit[Code Push] --> Tests[Backend Tests / Frontend Build]
+    Tests --> Security[Trivy + Gitleaks]
+    Security --> Build[Docker Build]
+    Build --> Push[ECR Push]
+    Push --> Deploy[Terraform Apply]
+    Deploy --> Staging[App Runner Staging]
+    Staging --> Monitor[CloudWatch + SNS]
+```
 
 ## Ephemeral Staging Commands
 

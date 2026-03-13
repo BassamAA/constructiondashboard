@@ -3,7 +3,7 @@
 ## Decision
 
 Keep Fly as the current production platform.
-Use AWS as a disposable staging and DevOps showcase environment.
+Use AWS as a migration-ready staging environment and an alternative production path for future scaling.
 
 ## Context
 
@@ -17,6 +17,19 @@ The project now also has an AWS deployment path with:
 - CloudWatch alarms and dashboard
 - SNS email alerting
 
+## Platform Diagram
+
+```mermaid
+flowchart LR
+    Users[Active Users] --> Fly[Fly Production]
+    Fly --> FlyDB[(Fly Database)]
+
+    Scale[Future Scale / Migration Path] --> AWS[AWS Staging]
+    AWS --> AR[App Runner]
+    AWS --> RDS[(RDS)]
+    AWS --> Mon[CloudWatch + SNS]
+```
+
 ## Why production remains on Fly
 
 - it is already serving real users
@@ -28,12 +41,12 @@ The project now also has an AWS deployment path with:
 
 - it demonstrates production-style DevOps practices
 - it provides a realistic cloud staging environment
-- it supports learning and portfolio evidence for Terraform, IAM, CI/CD, and observability
+- it prepares an AWS-native path if the application needs to scale to more users or stronger operational controls
 - it can be created and destroyed on demand to control cost
 
 ## Consequences
 
 - Fly remains the production source of truth for the live application
-- AWS staging is treated as temporary and disposable
+- AWS staging is treated as a temporary, migration-ready environment
 - data migration from Fly to AWS is not a current priority
 - future platform migration should happen only if justified by cost, reliability, scale, or compliance needs
