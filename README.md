@@ -88,6 +88,12 @@ Ephemeral staging guide: `docs/ephemeral-staging.md`
 Architecture decision: `docs/architecture-decision.md`
 Cost and platform tradeoffs: `docs/cost-and-platform-tradeoffs.md`
 
+## Platform Decision
+
+- Fly is the current production platform serving active users.
+- AWS is a migration-ready staging environment and a future production path if the application needs to scale further or require stronger operational controls.
+- Production is not being moved to AWS yet because Fly is already working well and the AWS architecture has a higher fixed monthly cost.
+
 ## Deployment Flow
 
 ```mermaid
