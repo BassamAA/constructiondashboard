@@ -51,7 +51,7 @@ async function login(page: import("@playwright/test").Page, email: string, passw
 test.describe("Permission-driven navigation", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("hides restricted manager modules when permissions are revoked", async ({ page }) => {
+  test("@critical hides restricted manager modules when permissions are revoked", async ({ page }) => {
     const manager = await createUser({
       role: "MANAGER",
       permissions: {
@@ -68,7 +68,7 @@ test.describe("Permission-driven navigation", () => {
     await expect(page.getByRole("link", { name: /inventory/i })).toHaveCount(0);
   });
 
-  test("limits worker navigation to worker-specific flows", async ({ page }) => {
+  test("@critical limits worker navigation to worker-specific flows", async ({ page }) => {
     const worker = await createUser({ role: "WORKER" });
 
     await login(page, worker.email, worker.password);

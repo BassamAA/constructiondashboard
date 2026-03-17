@@ -1,15 +1,8 @@
 name: Backend Performance Smoke
 
 on:
-  pull_request:
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend-performance-smoke.yml"
-  push:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend-performance-smoke.yml"
+  schedule:
+    - cron: "30 2 * * *"
   workflow_dispatch:
 
 jobs:

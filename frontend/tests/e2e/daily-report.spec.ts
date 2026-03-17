@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
 test.describe("Daily report", () => {
-  test("loads and downloads PDF", async ({ page }) => {
+  test("@critical loads and downloads PDF", async ({ page }) => {
     await page.goto("/daily-report");
     await expect(page.getByRole("heading", { name: /daily report/i })).toBeVisible();
 

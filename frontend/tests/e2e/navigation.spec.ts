@@ -26,13 +26,13 @@ const navChecks: Array<{ label: RegExp; heading: RegExp }> = [
 ];
 
 test.describe("Navigation", () => {
-  test("renders the shell and sign out action", async ({ page }) => {
+  test("@smoke renders the shell and sign out action", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "N.A.T" })).toBeVisible();
     await expect(page.getByRole("button", { name: /sign out/i })).toBeVisible();
   });
 
-  test("visible nav links lead to their modules", async ({ page }) => {
+  test("@critical visible nav links lead to their modules", async ({ page }) => {
     await page.goto("/");
 
     let executed = 0;

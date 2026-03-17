@@ -84,11 +84,49 @@ A change is release-ready when all of the following are true:
 
 1. backend integration suite passes
 2. frontend build passes
-3. Playwright smoke and accessibility suite passes
-4. backend performance smoke passes
-5. security scans pass
-6. staging deployment succeeds for infrastructure-affecting changes
-7. no unresolved blocker exists in critical-path workflows
+3. Playwright smoke and critical-path suite passes
+4. security scans pass
+5. staging deployment succeeds for infrastructure-affecting changes
+6. no unresolved blocker exists in critical-path workflows
+
+## CI Execution Model
+
+QA execution is intentionally tiered by risk and runtime cost.
+
+### Per pull request / merge gate
+
+These checks run on pull requests and pushes to `main`:
+
+- backend API integration tests
+- frontend production build
+- Playwright `@smoke` and `@critical` suites on Chromium
+- security checks
+
+These gates cover the workflows most likely to cause high-severity regressions:
+
+- authentication
+- shell/navigation integrity
+- permission boundaries
+- invoice creation and payment settlement
+- daily report export
+
+### Nightly regression
+
+These checks run on a schedule or by manual dispatch:
+
+- full Playwright regression across configured browsers
+- accessibility-focused E2E checks
+- backend performance smoke
+
+This keeps merge feedback fast while still exercising broader regression and non-functional coverage every day.
+
+## Playwright Tiers
+
+Current Playwright tagging:
+
+- `@smoke`: auth entry, dashboard shell, responsive nav, base shell validation
+- `@critical`: daily report download, invoice save/mark-paid, cross-module navigation, role-based access behavior
+- `@nightly`: accessibility sweeps and any checks reserved for scheduled regression
 
 ## Current Gaps
 

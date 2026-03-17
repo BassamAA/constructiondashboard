@@ -1,21 +1,12 @@
-name: Frontend E2E
+name: Frontend E2E Nightly
 
 on:
-  pull_request:
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - ".github/workflows/frontend-e2e.yml"
-  push:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - ".github/workflows/frontend-e2e.yml"
+  schedule:
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 jobs:
-  playwright:
+  playwright-full-regression:
     runs-on: ubuntu-latest
 
     services:
@@ -75,9 +66,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Start backend
         working-directory: backend
@@ -101,27 +92,27 @@ jobs:
           cat /tmp/frontend.log || true
           exit 1
 
-      - name: Run risk-based Playwright gate
+      - name: Run full Playwright regression
         working-directory: frontend
-        run: npx playwright test --project=chromium --grep "@smoke|@critical"
+        run: npx playwright test
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: nightly-playwright-report
           path: frontend/playwright-report
 
       - name: Upload backend log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-log
+          name: nightly-backend-log
           path: /tmp/backend.log
 
       - name: Upload frontend log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-log
+          name: nightly-frontend-log
           path: /tmp/frontend.log

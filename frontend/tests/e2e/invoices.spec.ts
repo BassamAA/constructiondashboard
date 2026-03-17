@@ -43,7 +43,7 @@ async function seedInvoiceScenario() {
 }
 
 test.describe("Invoice workflow", () => {
-  test("creates and marks an invoice paid through the UI", async ({ page }) => {
+  test("@critical creates and marks an invoice paid through the UI", async ({ page }) => {
     const { customer, receipt } = await seedInvoiceScenario();
 
     await page.goto("/invoices");

@@ -56,12 +56,17 @@ The QA approach is risk-based and centered on the business areas most likely to 
 Quality gates currently include:
 
 - DB-backed backend integration tests
-- Playwright E2E smoke coverage
-- accessibility smoke checks on key pages
-- backend performance smoke on an authenticated reporting endpoint
+- risk-based Playwright E2E tiers (`@smoke`, `@critical`, `@nightly`)
+- accessibility checks on key pages
+- nightly backend performance smoke on an authenticated reporting endpoint
 - frontend production build validation
 - security scans
 - staging deployment validation for infrastructure changes
+
+Execution model:
+
+- PRs / pushes to `main`: backend API tests, frontend build, Playwright `@smoke` + `@critical`, security checks
+- nightly: full Playwright regression and backend performance smoke
 
 QA strategy: `docs/test-strategy.md`
 Regression checklist: `docs/regression-checklist.md`
@@ -97,6 +102,7 @@ The repository includes AWS deployment automation:
 - Deployment workflow at `.github/workflows/deploy-aws.yml`
 - Security workflow at `.github/workflows/security-checks.yml` (Trivy + Gitleaks)
 - Frontend E2E workflow at `.github/workflows/frontend-e2e.yml`
+- Nightly frontend regression at `.github/workflows/frontend-e2e-nightly.yml`
 - Backend performance workflow at `.github/workflows/backend-performance-smoke.yml`
 
 Default deployment behavior:
