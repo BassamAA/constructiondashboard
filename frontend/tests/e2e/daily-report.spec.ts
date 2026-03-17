@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
 test.describe("Daily report", () => {
@@ -5,8 +6,8 @@ test.describe("Daily report", () => {
     await page.goto("/daily-report");
     await expect(page.getByRole("heading", { name: /daily report/i })).toBeVisible();
 
-    // Ensure date input has a value
-    const dateInput = page.getByLabel("Date", { exact: true });
+    const dateInput = page.getByLabel(/date/i);
+    await expect(dateInput).toBeVisible();
     const current = await dateInput.inputValue();
     if (!current) {
       const today = new Date().toISOString().slice(0, 10);
@@ -20,7 +21,9 @@ test.describe("Daily report", () => {
       page.waitForEvent("download"),
       page.getByRole("button", { name: /download pdf/i }).click(),
     ]);
-    const size = (await download.createReadStream())?.readableLength ?? 0;
-    expect(size).toBeGreaterThan(0);
+    const path = await download.path();
+    expect(path).toBeTruthy();
+    const stats = await fs.stat(path!);
+    expect(stats.size).toBeGreaterThan(0);
   });
 });

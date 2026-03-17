@@ -10,7 +10,8 @@
     "seed:bulk": "ts-node prisma/seedLargeDataset.ts",
     "test": "vitest run",
     "test:ci": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:perf": "node scripts/perf-smoke.js"
   },
   "keywords": [],
   "author": "",

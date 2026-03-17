@@ -44,6 +44,29 @@ Test run flow:
 A GitHub Actions workflow is included at `.github/workflows/backend-api-tests.yml` and
 starts a temporary PostgreSQL service for CI runs.
 
+## QA Strategy
+
+The QA approach is risk-based and centered on the business areas most likely to cause operational or financial regressions:
+
+- authentication and role-based access
+- receipts, invoices, payments, inventory, and payroll
+- master data management for customers, suppliers, and job sites
+- reporting and export flows
+
+Quality gates currently include:
+
+- DB-backed backend integration tests
+- Playwright E2E smoke coverage
+- accessibility smoke checks on key pages
+- backend performance smoke on an authenticated reporting endpoint
+- frontend production build validation
+- security scans
+- staging deployment validation for infrastructure changes
+
+QA strategy: `docs/test-strategy.md`
+Regression checklist: `docs/regression-checklist.md`
+Release signoff template: `docs/release-signoff-template.md`
+
 ## Architecture Diagram
 
 ```mermaid
@@ -73,6 +96,8 @@ The repository includes AWS deployment automation:
 - Multi-environment tfvars under `infrastructure/terraform/environments/`
 - Deployment workflow at `.github/workflows/deploy-aws.yml`
 - Security workflow at `.github/workflows/security-checks.yml` (Trivy + Gitleaks)
+- Frontend E2E workflow at `.github/workflows/frontend-e2e.yml`
+- Backend performance workflow at `.github/workflows/backend-performance-smoke.yml`
 
 Default deployment behavior:
 

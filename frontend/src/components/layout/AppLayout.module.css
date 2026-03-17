@@ -191,6 +191,11 @@
   color: rgba(241, 245, 249, 0.7);
 }
 
+.mobileSignOutButton {
+  color: #f8fafc;
+  border-color: rgba(248, 250, 252, 0.35);
+}
+
 .mobileDrawer .link {
   color: #f8fafc;
 }

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { expectNoSeriousA11yViolations } from "./accessibility";
 
 test.describe("Dashboard", () => {
   test("renders core sections", async ({ page }) => {
@@ -16,7 +17,13 @@ test.describe("Dashboard", () => {
     await expect(openMenu).toBeVisible();
     await openMenu.click();
 
-    await expect(page.getByLabel("Close menu")).toBeVisible();
+    await expect(page.getByRole("banner").getByLabel("Close menu")).toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
+  });
+
+  test("has no serious accessibility violations on the dashboard shell", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
   });
 });

@@ -150,23 +150,26 @@ export function AppLayout() {
         </main>
       </div>
 
-      <div
-        className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.mobileDrawerOpen : ""}`}
-        aria-hidden={!isMobileMenuOpen}
-      >
-        <div className={styles.mobileDrawerInner}>
-          <div className={styles.mobileUser}>
-            <div>
-              <p className={styles.mobileUserName}>{user?.name ?? user?.email}</p>
-              <p className={styles.mobileUserRole}>{user?.role.toLowerCase()}</p>
+      {isMobileMenuOpen ? (
+        <div className={`${styles.mobileDrawer} ${styles.mobileDrawerOpen}`}>
+          <div className={styles.mobileDrawerInner}>
+            <div className={styles.mobileUser}>
+              <div>
+                <p className={styles.mobileUserName}>{user?.name ?? user?.email}</p>
+                <p className={styles.mobileUserRole}>{user?.role.toLowerCase()}</p>
+              </div>
+              <button
+                type="button"
+                className={`ghost-button ${styles.mobileSignOutButton}`}
+                onClick={logout}
+              >
+                Sign out
+              </button>
             </div>
-            <button type="button" className="ghost-button" onClick={logout}>
-              Sign out
-            </button>
+            {renderNavGroups(styles.mobileNavGroup)}
           </div>
-          {renderNavGroups(styles.mobileNavGroup)}
         </div>
-      </div>
+      ) : null}
       {isMobileMenuOpen ? (
         <button
           type="button"

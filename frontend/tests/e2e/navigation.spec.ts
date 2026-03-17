@@ -1,28 +1,28 @@
 import { test, expect } from "@playwright/test";
 
-const navChecks: Array<{ label: string; heading: RegExp }> = [
-  { label: "Dashboard", heading: /dashboard/i },
-  { label: "Reports", heading: /reports/i },
-  { label: "Daily report", heading: /daily report/i },
-  { label: "Invoices", heading: /invoice/i },
-  { label: "Receipts", heading: /receipts/i },
-  { label: "Inventory", heading: /inventory/i },
-  { label: "Customers", heading: /customers/i },
-  { label: "Suppliers", heading: /suppliers/i },
-  { label: "Job Sites", heading: /job sites/i },
-  { label: "Products", heading: /product/i },
-  { label: "Employees", heading: /employees/i },
-  { label: "Payroll", heading: /payroll/i },
-  { label: "Payments", heading: /payments/i },
-  { label: "Finance", heading: /finance/i },
-  { label: "Fleet", heading: /fleet/i },
-  { label: "Tools", heading: /tools/i },
-  { label: "Diesel", heading: /diesel/i },
-  { label: "Debris", heading: /debris/i },
-  { label: "Tehmil & Tenzil", heading: /tehmil/i },
-  { label: "Tax", heading: /tax/i },
-  { label: "User access", heading: /manage users/i },
-  { label: "Debug", heading: /debug/i },
+const navChecks: Array<{ label: RegExp; heading: RegExp }> = [
+  { label: /dashboard/i, heading: /dashboard/i },
+  { label: /reports/i, heading: /reports/i },
+  { label: /daily report/i, heading: /daily report/i },
+  { label: /invoices/i, heading: /invoice/i },
+  { label: /receipts/i, heading: /receipts/i },
+  { label: /inventory/i, heading: /inventory/i },
+  { label: /customers/i, heading: /customers/i },
+  { label: /suppliers/i, heading: /suppliers/i },
+  { label: /job sites/i, heading: /job sites/i },
+  { label: /products/i, heading: /product/i },
+  { label: /employees/i, heading: /employees/i },
+  { label: /payroll/i, heading: /payroll/i },
+  { label: /payments/i, heading: /payments/i },
+  { label: /finance/i, heading: /finance/i },
+  { label: /fleet/i, heading: /fleet/i },
+  { label: /tools/i, heading: /tools/i },
+  { label: /diesel/i, heading: /diesel/i },
+  { label: /debris/i, heading: /debris/i },
+  { label: /tehmil/i, heading: /tehmil/i },
+  { label: /tax/i, heading: /tax/i },
+  { label: /user access/i, heading: /manage users/i },
+  { label: /debug/i, heading: /debug/i },
 ];
 
 test.describe("Navigation", () => {
@@ -37,13 +37,13 @@ test.describe("Navigation", () => {
 
     let executed = 0;
     for (const check of navChecks) {
-      const link = page.getByRole("link", { name: check.label, exact: true });
+      const link = page.getByRole("link", { name: check.label });
       if ((await link.count()) === 0) {
         continue;
       }
 
       await link.first().click();
-      await expect(page.getByRole("heading", { name: check.heading })).toBeVisible();
+      await expect(page.getByRole("heading", { name: check.heading }).first()).toBeVisible();
       executed += 1;
       if (executed >= 6) {
         break;

@@ -1,0 +1,93 @@
+name: Backend Performance Smoke
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-performance-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-performance-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  perf-smoke:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: construction_perf
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d construction_perf"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/construction_perf?schema=public
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/construction_perf?schema=public
+      PORT: "4000"
+      CORS_ORIGIN: http://localhost:5173
+      ADMIN_BOOTSTRAP_TOKEN: perf-bootstrap-token
+      BACKEND_URL: http://localhost:4000
+      PERF_ENDPOINT: /reports/summary
+      PERF_REQUESTS: "30"
+      PERF_CONCURRENCY: "5"
+      PERF_AVG_MS: "800"
+      PERF_P95_MS: "1500"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      - name: Start backend
+        run: npm run dev > /tmp/backend-perf.log 2>&1 &
+
+      - name: Wait for backend
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:4000/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/backend-perf.log || true
+          exit 1
+
+      - name: Run performance smoke
+        run: npm run test:perf
+
+      - name: Upload backend performance log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-performance-log
+          path: /tmp/backend-perf.log
