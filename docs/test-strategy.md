@@ -63,6 +63,7 @@ CI/CD quality gates also include:
 - backend test database migrations
 - frontend production build
 - backend performance smoke against an authenticated reporting endpoint
+- JMeter performance suite for heavier local and scheduled load validation
 - security scans with Trivy and Gitleaks
 - AWS deployment validation through staging infrastructure
 
@@ -117,6 +118,7 @@ These checks run on a schedule or by manual dispatch:
 - full Playwright regression across configured browsers
 - accessibility-focused E2E checks
 - backend performance smoke
+- JMeter load validation when deeper throughput testing is needed
 
 This keeps merge feedback fast while still exercising broader regression and non-functional coverage every day.
 
@@ -127,6 +129,16 @@ Current Playwright tagging:
 - `@smoke`: auth entry, dashboard shell, responsive nav, base shell validation
 - `@critical`: daily report download, invoice save/mark-paid, cross-module navigation, role-based access behavior
 - `@nightly`: accessibility sweeps and any checks reserved for scheduled regression
+
+## Performance Layers
+
+The project now uses two performance layers:
+
+- fast API smoke in CI for threshold enforcement
+- JMeter for heavier concurrent load against authenticated endpoints
+
+JMeter assets live under `performance/jmeter/` and are documented in `docs/performance-testing.md`.
+The JMeter suite is wired into the nightly backend performance workflow only, not the PR merge path.
 
 ## Current Gaps
 

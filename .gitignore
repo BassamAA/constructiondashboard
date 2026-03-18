@@ -10,6 +10,7 @@
 **/*.log
 .DS_Store
 .vscode/
+performance/jmeter/results/
 
 # Terraform local artifacts
 infrastructure/terraform/.terraform/

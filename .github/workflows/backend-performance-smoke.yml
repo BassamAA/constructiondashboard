@@ -40,6 +40,9 @@ jobs:
       PERF_CONCURRENCY: "5"
       PERF_AVG_MS: "800"
       PERF_P95_MS: "1500"
+      PERF_EMAIL: perf-admin@example.com
+      PERF_PASSWORD: Password123!
+      JMETER_VERSION: 5.6.3
 
     steps:
       - name: Checkout
@@ -78,9 +81,37 @@ jobs:
       - name: Run performance smoke
         run: npm run test:perf
 
+      - name: Install JMeter
+        run: |
+          curl -fsSL "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" -o /tmp/apache-jmeter.tgz
+          tar -xzf /tmp/apache-jmeter.tgz -C /tmp
+          echo "/tmp/apache-jmeter-${JMETER_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Run JMeter nightly load suite
+        working-directory: .
+        env:
+          JMETER_BIN: /tmp/apache-jmeter-${{ env.JMETER_VERSION }}/bin/jmeter
+          HOST: localhost
+          PORT: "4000"
+          PROTOCOL: http
+          THREADS: "20"
+          RAMP_UP: "15"
+          LOOPS: "30"
+          USERNAME: ${{ env.PERF_EMAIL }}
+          PASSWORD: ${{ env.PERF_PASSWORD }}
+          TARGET_PATH: /reports/summary
+        run: ./performance/jmeter/run-reports-summary-load.sh
+
       - name: Upload backend performance log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-performance-log
           path: /tmp/backend-perf.log
+
+      - name: Upload JMeter results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-reports-summary-load
+          path: performance/jmeter/results/reports-summary-load

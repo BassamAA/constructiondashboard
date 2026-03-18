@@ -59,6 +59,7 @@ Quality gates currently include:
 - risk-based Playwright E2E tiers (`@smoke`, `@critical`, `@nightly`)
 - accessibility checks on key pages
 - nightly backend performance smoke on an authenticated reporting endpoint
+- JMeter-based load testing assets for deeper performance validation
 - frontend production build validation
 - security scans
 - staging deployment validation for infrastructure changes
@@ -71,6 +72,7 @@ Execution model:
 QA strategy: `docs/test-strategy.md`
 Regression checklist: `docs/regression-checklist.md`
 Release signoff template: `docs/release-signoff-template.md`
+Performance testing: `docs/performance-testing.md`
 
 ## Architecture Diagram
 
