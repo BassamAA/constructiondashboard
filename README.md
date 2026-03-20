@@ -20,7 +20,9 @@ Copy them to `.env` locally and fill in real values. Do not commit `.env` files.
 ## Backend integration tests
 
 The backend test suite uses `Vitest` + `Supertest` and targets a separate PostgreSQL database.
-This keeps API tests isolated from development data.
+This keeps API tests isolated from development data. The suite covers authentication, RBAC,
+receipts, invoices, payments, payroll, and cash-flow logic — 55 tests total (43 integration,
+12 unit).
 
 Run tests locally:
 
@@ -40,9 +42,6 @@ Test run flow:
 1. `backend/tests/global.setup.ts` loads `.env.test` and runs `prisma migrate deploy`.
 2. `Vitest` executes the API integration tests.
 3. `backend/tests/global.teardown.ts` clears test data while keeping Prisma migration history.
-
-A GitHub Actions workflow is included at `.github/workflows/backend-api-tests.yml` and
-starts a temporary PostgreSQL service for CI runs.
 
 ## QA Strategy
 
@@ -66,7 +65,7 @@ Quality gates currently include:
 
 Execution model:
 
-- PRs / pushes to `main`: backend API tests, frontend build, Playwright `@smoke` + `@critical`, security checks
+- PRs / pushes to `main`: backend API tests + frontend build (parallel) → deploy to Fly.io production if both pass; Playwright `@smoke` + `@critical`, security checks
 - nightly: full Playwright regression and backend performance smoke
 
 QA strategy: `docs/test-strategy.md`
@@ -78,39 +77,40 @@ Performance testing: `docs/performance-testing.md`
 
 ```mermaid
 flowchart LR
-    User[Users] --> Fly[Fly Production App]
+    User[Users] --> Fly[Fly.io Production\nalassaad.fly.dev]
     Fly --> FlyDB[(Fly Postgres)]
 
-    Engineer[Engineer / GitHub Actions] --> GH[GitHub Actions CI/CD]
-    GH --> ECR[Amazon ECR]
-    GH --> TF[Terraform]
+    Engineer[Engineer] -->|git push main| GH[GitHub Actions CI/CD]
+    GH -->|backend-tests + frontend-build pass| Fly
 
+    GH -->|deploy-aws.yml\nstaging only| ECR[Amazon ECR]
+    ECR --> TF[Terraform]
     TF --> AR[App Runner Staging]
     TF --> RDS[(RDS PostgreSQL)]
     TF --> CW[CloudWatch]
-    TF --> SNS[SNS Email Alerts]
-
-    LocalFE[Local Frontend] -->|CORS| AR
-    AR --> RDS
-    CW --> SNS
+    CW --> SNS[SNS Email Alerts]
 ```
 
-## AWS CI/CD and IaC
+## CI/CD Workflows
 
-The repository includes AWS deployment automation:
+**Production (Fly.io)** — `.github/workflows/deploy-fly.yml`
 
-- Terraform stack in `infrastructure/terraform/`
-- Multi-environment tfvars under `infrastructure/terraform/environments/`
-- Deployment workflow at `.github/workflows/deploy-aws.yml`
-- Security workflow at `.github/workflows/security-checks.yml` (Trivy + Gitleaks)
-- Frontend E2E workflow at `.github/workflows/frontend-e2e.yml`
-- Nightly frontend regression at `.github/workflows/frontend-e2e-nightly.yml`
-- Backend performance workflow at `.github/workflows/backend-performance-smoke.yml`
+- Triggers on push to `main` (touching `backend/`, `frontend/`, `fly.toml`, or the workflow itself) and on manual dispatch
+- Runs backend API tests (against a temporary Postgres service) and a frontend production build in parallel
+- Deploys to `alassaad.fly.dev` only after both pass (`flyctl deploy --remote-only`)
+- Requires `FLY_API_TOKEN` secret in the `production` GitHub environment
 
-Default deployment behavior:
+**AWS Staging (disabled by default to save cost)** — `.github/workflows/deploy-aws.yml`
 
-- Push to `main` deploys to `staging`
-- Manual dispatch can deploy to `prod` (configure GitHub Environment approvals)
+- Enable manually when you need to validate against the AWS App Runner staging environment
+- Terraform stack in `infrastructure/terraform/`; multi-environment tfvars in `infrastructure/terraform/environments/`
+
+**Other workflows:**
+
+- Security: `.github/workflows/security-checks.yml` (Trivy + Gitleaks)
+- Frontend E2E: `.github/workflows/frontend-e2e.yml`
+- Nightly regression: `.github/workflows/frontend-e2e-nightly.yml`
+- Backend performance smoke: `.github/workflows/backend-performance-smoke.yml`
 
 Setup checklist: `docs/devops-setup.md`
 AWS bootstrap guide: `docs/aws-bootstrap.md`
@@ -129,33 +129,49 @@ Cost and platform tradeoffs: `docs/cost-and-platform-tradeoffs.md`
 
 ## Deployment Flow
 
+**Production (Fly.io):**
+
 ```mermaid
 flowchart TD
-    Commit[Code Push] --> Tests[Backend Tests / Frontend Build]
-    Tests --> Security[Trivy + Gitleaks]
+    Commit[git push main] --> Par{Parallel}
+    Par --> BT[Backend API Tests\nPostgres service in CI]
+    Par --> FB[Frontend Build\nVite + TypeScript]
+    BT --> Gate{Both pass?}
+    FB --> Gate
+    Gate -->|yes| Deploy[flyctl deploy --remote-only]
+    Deploy --> Migrations[Release command:\nrun-migrations.js]
+    Migrations --> Live[alassaad.fly.dev live]
+    Gate -->|no| Block[Deploy blocked]
+```
+
+**AWS Staging (manual, disabled by default):**
+
+```mermaid
+flowchart TD
+    Commit[Code Push] --> Security[Trivy + Gitleaks]
     Security --> Build[Docker Build]
     Build --> Push[ECR Push]
-    Push --> Deploy[Terraform Apply]
-    Deploy --> Staging[App Runner Staging]
+    Push --> TF[Terraform Apply]
+    TF --> Staging[App Runner Staging]
     Staging --> Monitor[CloudWatch + SNS]
 ```
 
 ## Ephemeral Staging Commands
 
-Bring staging up from the repo root:
+Bring staging up from the repo root (replace `<SHA>` with the ECR image tag to deploy):
 
 ```bash
-terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform init -reconfigure -backend-config=backends/staging.hcl
+terraform -chdir=infrastructure/terraform init -reconfigure -backend-config=backends/staging.hcl
 
-terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform apply \
+terraform -chdir=infrastructure/terraform apply \
   -var-file=environments/staging.tfvars \
-  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-2acfeb38ae28"
+  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:<SHA>"
 ```
 
 Tear staging down from the repo root:
 
 ```bash
-terraform -chdir=/Users/bassam/construction-dashboard/infrastructure/terraform destroy \
+terraform -chdir=infrastructure/terraform destroy \
   -var-file=environments/staging.tfvars \
-  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:sha-2acfeb38ae28"
+  -var="ecr_image_identifier=385502454961.dkr.ecr.us-east-1.amazonaws.com/constructiondashboard:<SHA>"
 ```
