@@ -62,33 +62,35 @@ describeIfDatabase("Receipt business logic", () => {
     expect(res.body.type).toBe("TVA");
   });
 
-  it("rejects a duplicate receipt number and returns expectedNext hint", async () => {
+  it("rejects an out-of-sequence receipt number and returns expectedNext hint", async () => {
     const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
     const customer = await createCustomer();
     const product = await createProduct({ stockQty: 100 });
 
+    // Create receipt "1" (the first expected number on an empty DB)
     const first = await manager.request
       .post("/receipts")
       .set("Cookie", manager.cookie)
       .send({
         customerId: customer.id,
-        receiptNo: "100",
+        receiptNo: "1",
         items: [{ productId: product.id, quantity: 1, unitPrice: 10 }],
       });
 
     expect(first.status).toBe(201);
 
-    const duplicate = await manager.request
+    // Try to create "1" again — next expected is "2", so "1" is out of sequence
+    const outOfSeq = await manager.request
       .post("/receipts")
       .set("Cookie", manager.cookie)
       .send({
         customerId: customer.id,
-        receiptNo: "100",
+        receiptNo: "1",
         items: [{ productId: product.id, quantity: 1, unitPrice: 10 }],
       });
 
-    expect(duplicate.status).toBe(409);
-    expect(duplicate.body).toMatchObject({ expectedNext: "101" });
+    expect(outOfSeq.status).toBe(409);
+    expect(outOfSeq.body).toMatchObject({ expectedNext: "2" });
   });
 
   it("auto-increments the receipt number based on the last created receipt", async () => {
@@ -96,15 +98,16 @@ describeIfDatabase("Receipt business logic", () => {
     const customer = await createCustomer();
     const product = await createProduct({ stockQty: 100 });
 
+    // First auto-assigned receipt → "1"
     await manager.request
       .post("/receipts")
       .set("Cookie", manager.cookie)
       .send({
         customerId: customer.id,
-        receiptNo: "500",
         items: [{ productId: product.id, quantity: 1, unitPrice: 10 }],
       });
 
+    // Second auto-assigned receipt → "2"
     const next = await manager.request
       .post("/receipts")
       .set("Cookie", manager.cookie)
@@ -114,7 +117,7 @@ describeIfDatabase("Receipt business logic", () => {
       });
 
     expect(next.status).toBe(201);
-    expect(next.body.receiptNo).toBe("501");
+    expect(next.body.receiptNo).toBe("2");
   });
 
   it("admin can delete a receipt and it is removed from the database", async () => {
