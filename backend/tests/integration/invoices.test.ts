@@ -100,6 +100,110 @@ describeIfDatabase("Invoice routes", () => {
     expect(payment).not.toBeNull();
   });
 
+  it("lists invoices and supports filtering by status", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+    const receipt = await createReceipt({ customerId: customer.id, total: 60, receiptNo: "R-LIST-1" });
+
+    await manager.request
+      .post("/invoices")
+      .set("Cookie", manager.cookie)
+      .send({ customerId: customer.id, receiptIds: [receipt.id] });
+
+    const res = await manager.request
+      .get("/invoices?status=PENDING")
+      .set("Cookie", manager.cookie);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0].status).toBe("PENDING");
+    expect(res.body[0]).toHaveProperty("id");
+    expect(res.body[0]).toHaveProperty("invoice");
+  });
+
+  it("fetches a single invoice by id", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+    const receipt = await createReceipt({ customerId: customer.id, total: 75, receiptNo: "R-GET-1" });
+
+    const created = await manager.request
+      .post("/invoices")
+      .set("Cookie", manager.cookie)
+      .send({ customerId: customer.id, receiptIds: [receipt.id] });
+
+    expect(created.status).toBe(201);
+
+    const res = await manager.request
+      .get(`/invoices/${created.body.id}`)
+      .set("Cookie", manager.cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(created.body.id);
+    expect(res.body.invoice.receiptCount).toBe(1);
+    expect(res.body.invoice.subtotal).toBe(75);
+  });
+
+  it("returns 404 when fetching a nonexistent invoice", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+
+    const res = await manager.request
+      .get("/invoices/999999")
+      .set("Cookie", manager.cookie);
+
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ error: "Invoice not found" });
+  });
+
+  it("rejects invoicing a receipt that is already part of another invoice", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+    const receipt = await createReceipt({ customerId: customer.id, total: 90, receiptNo: "R-DUP-INV" });
+
+    const first = await manager.request
+      .post("/invoices")
+      .set("Cookie", manager.cookie)
+      .send({ customerId: customer.id, receiptIds: [receipt.id] });
+
+    expect(first.status).toBe(201);
+
+    const second = await manager.request
+      .post("/invoices")
+      .set("Cookie", manager.cookie)
+      .send({ customerId: customer.id, receiptIds: [receipt.id] });
+
+    expect(second.status).toBe(400);
+    expect(second.body.error).toMatch(/already been invoiced/i);
+  });
+
+  it("rejects marking an already-paid invoice as paid again", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+    const receipt = await createReceipt({ customerId: customer.id, total: 50, receiptNo: "R-DBLEPAY" });
+
+    const created = await manager.request
+      .post("/invoices")
+      .set("Cookie", manager.cookie)
+      .send({ customerId: customer.id, receiptIds: [receipt.id] });
+
+    expect(created.status).toBe(201);
+
+    const firstPay = await manager.request
+      .post(`/invoices/${created.body.id}/mark-paid`)
+      .set("Cookie", manager.cookie)
+      .send({});
+
+    expect(firstPay.status).toBe(200);
+
+    const secondPay = await manager.request
+      .post(`/invoices/${created.body.id}/mark-paid`)
+      .set("Cookie", manager.cookie)
+      .send({});
+
+    expect(secondPay.status).toBe(400);
+    expect(secondPay.body.error).toMatch(/already marked as paid/i);
+  });
+
   it("only allows admins to delete invoices", async () => {
     const admin = await createAuthenticatedRequest({ role: UserRole.ADMIN });
     const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });

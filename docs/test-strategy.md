@@ -25,15 +25,15 @@ Primary goals:
 
 Current backend coverage includes:
 
-- auth
-- receipts
-- invoices
-- payments
-- inventory
-- payroll
-- reports
-- customers / suppliers / job sites
-- RBAC boundaries
+- auth (login, session validation, invalid credentials — mocked)
+- receipts (auto-numbering, TVA tax application, sequential validation, delete, worker block, 404)
+- invoices (create, list with status filter, fetch by ID, 404, mixed-type rejection, already-invoiced guard, mark-paid propagation, double-mark-paid guard, admin-only delete)
+- payments (customer FIFO allocation, supplier allocation with inventory links, DELETE reversion, zero-amount validation, missing-customerId guard, missing-supplierId guard)
+- inventory (purchase creates and increments stock, out-of-sequence number rejection, delete reverts stock)
+- payroll (salary entry, piecework entry, payroll run creation and debit, missing-quantity validation)
+- reports (summary aggregates for receipts and purchases)
+- customers / suppliers / job sites (CRUD, deletion guards when linked records exist, job site filtering by customer)
+- RBAC boundaries (worker blocked from manager modules, worker write-block system-wide, manager admin-route block, admin audit-log access, permission revocation, expired session rejection)
 
 ### 2. Frontend E2E tests
 
@@ -48,13 +48,12 @@ Primary goals:
 
 Current E2E coverage includes:
 
-- authentication
-- dashboard and responsive navigation
-- accessibility smoke checks on login and dashboard
+- authentication (unauthenticated redirect, login form, accessibility)
+- dashboard (core sections, responsive/mobile navigation, accessibility)
+- navigation (shell, sign-out, all visible nav links verified against their module headings)
 - daily report PDF download
-- invoice creation and mark-paid workflow
-- restricted manager navigation
-- worker-only navigation
+- invoice creation and mark-paid workflow (full UI workflow with API-seeded data)
+- permission-driven navigation (manager with revoked permissions, worker-only navigation)
 
 ### 3. Build and deployment validation
 
@@ -144,8 +143,9 @@ The JMeter suite is wired into the nightly backend performance workflow only, no
 
 The QA baseline is strong, but these areas remain future improvements:
 
-- broader accessibility coverage beyond smoke pages
+- broader accessibility coverage beyond login and dashboard smoke pages
 - deeper performance / load testing beyond smoke thresholds
 - visual regression checks
-- coverage reporting and trend tracking
+- code coverage reporting and trend tracking (vitest `--coverage` with `@vitest/coverage-v8`)
 - synthetic post-deploy smoke checks in staging
+- E2E specs for receipts creation flow and payroll UI workflow

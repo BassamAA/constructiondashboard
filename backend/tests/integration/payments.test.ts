@@ -108,4 +108,75 @@ describeIfDatabase("Payment routes", () => {
       error: "supplierId is required for supplier payments",
     });
   });
+
+  it("rejects a payment with zero amount", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+
+    const res = await manager.request
+      .post("/payments")
+      .set("Cookie", manager.cookie)
+      .send({
+        type: "CUSTOMER_PAYMENT",
+        customerId: customer.id,
+        amount: 0,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ error: "amount must be a positive number" });
+  });
+
+  it("rejects a customer payment without customerId", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+
+    const res = await manager.request
+      .post("/payments")
+      .set("Cookie", manager.cookie)
+      .send({
+        type: "CUSTOMER_PAYMENT",
+        amount: 50,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({
+      error: "customerId is required for customer payments",
+    });
+  });
+
+  it("deleting a payment reverts the applied amount on linked receipts", async () => {
+    const manager = await createAuthenticatedRequest({ role: UserRole.MANAGER });
+    const customer = await createCustomer();
+    const receipt = await createReceipt({
+      customerId: customer.id,
+      total: 80,
+      amountPaid: 0,
+      isPaid: false,
+      receiptNo: "R-DEL-REVERT",
+    });
+
+    const created = await manager.request
+      .post("/payments")
+      .set("Cookie", manager.cookie)
+      .send({
+        type: "CUSTOMER_PAYMENT",
+        customerId: customer.id,
+        amount: 80,
+      });
+
+    expect(created.status).toBe(201);
+
+    const afterPayment = await prisma.receipt.findUniqueOrThrow({ where: { id: receipt.id } });
+    expect(afterPayment.isPaid).toBe(true);
+    expect(Number(afterPayment.amountPaid)).toBe(80);
+
+    const deleted = await manager.request
+      .delete(`/payments/${created.body.id}`)
+      .set("Cookie", manager.cookie);
+
+    expect(deleted.status).toBe(204);
+
+    const afterDelete = await prisma.receipt.findUniqueOrThrow({ where: { id: receipt.id } });
+    expect(Number(afterDelete.amountPaid)).toBe(0);
+    expect(afterDelete.isPaid).toBe(false);
+  });
 });

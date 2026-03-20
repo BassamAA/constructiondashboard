@@ -239,10 +239,13 @@ app.post(
   async (req: Request, res: Response) => {
     try {
       const { name, phone } = req.body;
+      if (typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ error: "name is required" });
+      }
       const driver = await prisma.driver.create({
-        data: { name, phone },
+        data: { name: name.trim(), phone: typeof phone === "string" && phone.trim().length > 0 ? phone.trim() : null },
       });
-      res.json(driver);
+      res.status(201).json(driver);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to create driver" });

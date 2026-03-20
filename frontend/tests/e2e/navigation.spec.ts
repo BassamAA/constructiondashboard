@@ -45,9 +45,6 @@ test.describe("Navigation", () => {
       await link.first().click();
       await expect(page.getByRole("heading", { name: check.heading }).first()).toBeVisible();
       executed += 1;
-      if (executed >= 6) {
-        break;
-      }
     }
 
     expect(executed).toBeGreaterThan(0);

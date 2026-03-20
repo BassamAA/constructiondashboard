@@ -1162,7 +1162,7 @@ router.post("/", async (req, res) => {
           metadata: { total: receipt.total, isPaid: receipt.isPaid },
         });
 
-        res.json(receipt);
+        res.status(201).json(receipt);
         return;
       } catch (err: any) {
         if (

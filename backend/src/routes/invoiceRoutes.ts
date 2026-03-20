@@ -346,6 +346,7 @@ router.post("/", async (req, res) => {
       description: `Invoice ${fresh.invoiceNo ?? fresh.id} created with ${
         fresh.invoiceReceipts.length
       } receipts`,
+      user: req.user?.email ?? req.user?.name ?? null,
       metadata: {
         customerId: fresh.customerId,
         subtotal: fresh.subtotal,
@@ -489,6 +490,7 @@ router.post("/:id/mark-paid", async (req, res) => {
       entityType: "invoice",
       entityId: updatedInvoice.id,
       description: `Invoice ${updatedInvoice.invoiceNo ?? updatedInvoice.id} marked as paid`,
+      user: req.user?.email ?? req.user?.name ?? null,
       metadata: {
         total: updatedInvoice.total,
         paidAt: paidAt.toISOString(),
@@ -530,6 +532,7 @@ router.delete("/:id", requireRole(UserRole.ADMIN), async (req, res) => {
       entityType: "invoice",
       entityId: id,
       description: `Invoice ${invoice.invoiceNo ?? id} deleted by admin`,
+      user: req.user?.email ?? req.user?.name ?? null,
       metadata: {
         customerId: invoice.customerId,
         subtotal: invoice.subtotal,
