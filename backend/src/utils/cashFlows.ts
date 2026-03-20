@@ -14,12 +14,17 @@ export const cashOutTypes: PaymentType[] = [
 export const computeInventoryAmount = (entry: {
   totalCost: number | null;
   unitCost: number | null;
-  quantity: number;
+  quantity: number | null;
 }) => {
   if (entry.totalCost !== null && entry.totalCost !== undefined) {
     return Number(entry.totalCost);
   }
-  if (entry.unitCost !== null && entry.unitCost !== undefined) {
+  if (
+    entry.unitCost !== null &&
+    entry.unitCost !== undefined &&
+    entry.quantity !== null &&
+    entry.quantity !== undefined
+  ) {
     return Number(entry.unitCost) * Number(entry.quantity);
   }
   return 0;

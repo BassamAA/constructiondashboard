@@ -896,7 +896,7 @@ export function ReportsPage() {
       return null;
     }
     if (customReport.items.length === 0) {
-      return <p>No rows match these filters yet.</p>;
+      return <p style={{ color: "var(--color-muted)" }}>No records match the selected filters. Try widening the date range or clearing some filters.</p>;
     }
     switch (customReport.dataset) {
       case "receipts": {
@@ -1100,11 +1100,11 @@ export function ReportsPage() {
         <div>
           <p style={{ margin: 0, fontSize: 14, color: "var(--color-muted)" }}>Quick navigation</p>
           <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-            <button type="button" className="ghost-button" onClick={() => scrollToSection(summarySectionRef)}>
-              Summary insights
-            </button>
             <button type="button" className="ghost-button" onClick={() => scrollToSection(customSectionRef)}>
               Custom builder
+            </button>
+            <button type="button" className="ghost-button" onClick={() => scrollToSection(summarySectionRef)}>
+              Summary insights
             </button>
             <button type="button" className="ghost-button" onClick={() => scrollToSection(dailySectionRef)}>
               Daily snapshot
@@ -1138,38 +1138,35 @@ export function ReportsPage() {
 
       <div className="report-toolbar">
         <div className="report-actions">
+          <span style={{ fontSize: 12, color: "var(--color-muted)", alignSelf: "center" }}>Summary:</span>
           <button
             type="button"
             className="secondary-button"
             onClick={handleDownloadSummary}
             disabled={!summary}
+            title="Download the period revenue timeline as CSV"
           >
-            Download CSV snapshot
+            Export CSV
           </button>
           <button
             type="button"
             className="ghost-button"
             onClick={handleShareSnapshot}
             disabled={!summary}
+            title="Open email with a summary snapshot"
           >
-            Share via email
+            Share
           </button>
-          <button type="button" className="ghost-button" onClick={handleDownloadPdf} disabled={false}>
-            Download PDF (credits/debits & inventory)
+          <span style={{ fontSize: 12, color: "var(--color-muted)", alignSelf: "center", marginLeft: 8 }}>PDFs:</span>
+          <button type="button" className="ghost-button" onClick={handleDownloadPdf} title="Credits, debits & inventory PDF">
+            Financials PDF
           </button>
-          <button type="button" className="ghost-button" onClick={handleDownloadBalancesPdf} disabled={false}>
-            Download Balances PDF (customers, suppliers, inventory)
-          </button>
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() => scrollToSection(dailySectionRef)}
-          >
-            Jump to daily snapshot
+          <button type="button" className="ghost-button" onClick={handleDownloadBalancesPdf} title="Customer, supplier & inventory balances PDF">
+            Balances PDF
           </button>
         </div>
         <div className="report-meta">
-          <span>Current range: {rangeLabel}</span>
+          <span>Range: {rangeLabel}</span>
         </div>
       </div>
 
@@ -1626,6 +1623,11 @@ export function ReportsPage() {
                   {customParams.aggregateBy
                     ? `Grouped by ${customParams.aggregateBy}`
                     : `Timeline (${customParams.groupBy ?? "day"})`}
+                  {customReport.groups?.length
+                    ? ` · ${customReport.groups.length} group${customReport.groups.length !== 1 ? "s" : ""}`
+                    : customReport.items?.length
+                    ? ` · ${customReport.items.length} row${customReport.items.length !== 1 ? "s" : ""}`
+                    : ""}
                 </span>
                 <button type="button" className="ghost-button" onClick={handleDownloadCustomCsv}>
                   Download CSV
@@ -1724,40 +1726,6 @@ export function ReportsPage() {
               </button>
             </div>
           ) : null}
-          {isSummaryCustomerFilterActive ? (
-            <div
-              style={{
-                backgroundColor: "#fefce8",
-                border: "1px solid #fde68a",
-                borderRadius: 8,
-                padding: "12px 16px",
-                marginBottom: 24,
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <strong>Customer filter enabled.</strong>{" "}
-                <span>
-                  Showing activity for:{" "}
-                  {selectedSummaryCustomerNames.length > 0
-                    ? selectedSummaryCustomerNames.join(", ")
-                    : `${selectedCustomerIdsNumbers.length} customers`}
-                  .
-                </span>
-              </div>
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() => setSelectedCustomerIds([])}
-              >
-                Clear customer filter
-              </button>
-            </div>
-          ) : null}
-
           <div className="report-highlight-grid">
             {highlightStats.map((stat) => (
               <div key={stat.label} className="stat-card">
@@ -1788,7 +1756,14 @@ export function ReportsPage() {
               </ul>
             </div>
             <div className="section-card report-card">
-              <h3 style={{ marginTop: 0 }}>Customer receivables</h3>
+              <h3 style={{ marginTop: 0 }}>
+                Customer receivables{" "}
+                {summary.receivables?.customers?.length ? (
+                  <span style={{ fontSize: "0.8rem", fontWeight: "normal", color: "var(--color-muted)" }}>
+                    ({summary.receivables.customers.length} customer{summary.receivables.customers.length !== 1 ? "s" : ""})
+                  </span>
+                ) : null}
+              </h3>
               {summary.receivables?.customers?.length ? (
                 <div className="table-scroll">
                   <table>
@@ -1856,19 +1831,30 @@ export function ReportsPage() {
                     <thead>
                       <tr>
                         <th>Supplier</th>
-                        <th>Cost</th>
-                        <th>Entries</th>
+                        <th style={{ textAlign: "right" }}>Cost</th>
+                        <th style={{ textAlign: "right" }}>Entries</th>
                       </tr>
                     </thead>
                     <tbody>
                       {summary.purchases.purchasesBySupplier.map((row) => (
                         <tr key={row.supplier}>
                           <td>{row.supplier}</td>
-                          <td>{formatCurrency(row.totalCost)}</td>
-                          <td>{row.entries}</td>
+                          <td style={{ textAlign: "right" }}>{formatCurrency(row.totalCost)}</td>
+                          <td style={{ textAlign: "right" }}>{row.entries}</td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr style={{ fontWeight: 600, borderTop: "2px solid var(--color-border, #e5e7eb)" }}>
+                        <td>Total</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(summary.purchases.purchasesBySupplier.reduce((s, r) => s + r.totalCost, 0))}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          {summary.purchases.purchasesBySupplier.reduce((s, r) => s + r.entries, 0)}
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               ) : (
@@ -1946,7 +1932,14 @@ export function ReportsPage() {
             </div>
 
             <div className="section-card report-card wide">
-              <h3 style={{ marginTop: 0 }}>Material sales</h3>
+              <h3 style={{ marginTop: 0 }}>
+                Material sales{" "}
+                {summary.materialSales.length > 0 ? (
+                  <span style={{ fontSize: "0.8rem", fontWeight: "normal", color: "var(--color-muted)" }}>
+                    ({summary.materialSales.length} product{summary.materialSales.length !== 1 ? "s" : ""})
+                  </span>
+                ) : null}
+              </h3>
               {summary.materialSales.length === 0 ? (
                 <p>No sales recorded for this period.</p>
               ) : (
@@ -1955,27 +1948,39 @@ export function ReportsPage() {
                     <thead>
                       <tr>
                         <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Revenue</th>
-                        <th>Avg sale</th>
-                        <th>Avg cost</th>
-                        <th>Profit/unit</th>
-                        <th>Margin</th>
+                        <th style={{ textAlign: "right" }}>Quantity</th>
+                        <th style={{ textAlign: "right" }}>Revenue</th>
+                        <th style={{ textAlign: "right" }}>Avg sale</th>
+                        <th style={{ textAlign: "right" }}>Avg cost</th>
+                        <th style={{ textAlign: "right" }}>Profit/unit</th>
+                        <th style={{ textAlign: "right" }}>Margin</th>
                       </tr>
                     </thead>
                     <tbody>
                       {summary.materialSales.map((row) => (
                         <tr key={row.productId}>
                           <td>{row.productName}</td>
-                          <td>{formatNumber(row.quantity)}</td>
-                          <td>{formatCurrency(row.revenue)}</td>
-                          <td>{formatOptionalCurrency(row.averageSalePrice)}</td>
-                          <td>{formatOptionalCurrency(row.averageCost)}</td>
-                          <td>{formatOptionalCurrency(row.profitPerUnit)}</td>
-                          <td>{formatPercentage(row.profitMargin)}</td>
+                          <td style={{ textAlign: "right" }}>{formatNumber(row.quantity)}</td>
+                          <td style={{ textAlign: "right" }}>{formatCurrency(row.revenue)}</td>
+                          <td style={{ textAlign: "right" }}>{formatOptionalCurrency(row.averageSalePrice)}</td>
+                          <td style={{ textAlign: "right" }}>{formatOptionalCurrency(row.averageCost)}</td>
+                          <td style={{ textAlign: "right" }}>{formatOptionalCurrency(row.profitPerUnit)}</td>
+                          <td style={{ textAlign: "right" }}>{formatPercentage(row.profitMargin)}</td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr style={{ fontWeight: 600, borderTop: "2px solid var(--color-border, #e5e7eb)" }}>
+                        <td>Total</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatNumber(summary.materialSales.reduce((s, r) => s + r.quantity, 0))}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(summary.materialSales.reduce((s, r) => s + r.revenue, 0))}
+                        </td>
+                        <td colSpan={4} />
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}
@@ -2156,7 +2161,9 @@ export function ReportsPage() {
           </div>
         </>
       ) : (
-        <p>No data available for the selected range.</p>
+        <p style={{ color: "var(--color-muted)" }}>
+          No sales data available for {rangeLabel}. Try a wider timeframe or clear the product/customer filters.
+        </p>
       )}
 
       <div style={{ marginTop: 48 }}>
@@ -2268,7 +2275,14 @@ export function ReportsPage() {
 
             <div className="report-grid">
               <div className="section-card report-card wide">
-                <h3 style={{ marginTop: 0 }}>Receipts</h3>
+                <h3 style={{ marginTop: 0 }}>
+                  Receipts{" "}
+                  {dailyReport.receipts.length > 0 ? (
+                    <span style={{ fontSize: "0.8rem", fontWeight: "normal", color: "var(--color-muted)" }}>
+                      ({dailyReport.receipts.length} record{dailyReport.receipts.length !== 1 ? "s" : ""})
+                    </span>
+                  ) : null}
+                </h3>
                 {dailyReport.receipts.length === 0 ? (
                   <p>No receipts recorded for this day.</p>
                 ) : (
@@ -2279,10 +2293,10 @@ export function ReportsPage() {
                           <th>Receipt #</th>
                           <th>Timestamp</th>
                           <th>Customer / Walk-in</th>
-                          <th>Total</th>
-                          {hasDailyProductFilter ? <th>Filtered total</th> : null}
-                          <th>Paid</th>
-                          <th>Balance</th>
+                          <th style={{ textAlign: "right" }}>Total</th>
+                          {hasDailyProductFilter ? <th style={{ textAlign: "right" }}>Filtered total</th> : null}
+                          <th style={{ textAlign: "right" }}>Paid</th>
+                          <th style={{ textAlign: "right" }}>Balance</th>
                           <th>Items</th>
                         </tr>
                       </thead>
@@ -2290,7 +2304,7 @@ export function ReportsPage() {
                         {dailyReport.receipts.map((receipt) => {
                           const total = Number(receipt.total ?? 0);
                           const paid = Number(receipt.amountPaid ?? 0);
-                          const balance = total - paid;
+                          const balance = Math.max(total - paid, 0);
                           const filtered = receipt.filteredTotal ?? null;
                           const itemsSummary =
                             receipt.items.length === 0
@@ -2313,19 +2327,39 @@ export function ReportsPage() {
                                 {formatDate(receipt.date)} {formatTime(receipt.date)}
                               </td>
                               <td>{receipt.customer?.name ?? receipt.walkInName ?? "Walk-in"}</td>
-                              <td>{formatCurrency(total)}</td>
+                              <td style={{ textAlign: "right" }}>{formatCurrency(total)}</td>
                               {hasDailyProductFilter ? (
-                                <td>
+                                <td style={{ textAlign: "right" }}>
                                   {filtered !== null ? formatCurrency(filtered) : formatCurrency(0)}
                                 </td>
                               ) : null}
-                              <td>{formatCurrency(paid)}</td>
-                              <td>{formatCurrency(balance)}</td>
+                              <td style={{ textAlign: "right" }}>{formatCurrency(paid)}</td>
+                              <td style={{ textAlign: "right" }}>{formatCurrency(balance)}</td>
                               <td style={{ whiteSpace: "normal" }}>{itemsSummary}</td>
                             </tr>
                           );
                         })}
                       </tbody>
+                      <tfoot>
+                        <tr style={{ fontWeight: 600, borderTop: "2px solid var(--color-border, #e5e7eb)" }}>
+                          <td colSpan={3}>Total ({dailyReport.receipts.length})</td>
+                          <td style={{ textAlign: "right" }}>
+                            {formatCurrency(dailyReport.receipts.reduce((s, r) => s + Number(r.total ?? 0), 0))}
+                          </td>
+                          {hasDailyProductFilter ? (
+                            <td style={{ textAlign: "right" }}>
+                              {formatCurrency(dailyReport.receipts.reduce((s, r) => s + Number(r.filteredTotal ?? 0), 0))}
+                            </td>
+                          ) : null}
+                          <td style={{ textAlign: "right" }}>
+                            {formatCurrency(dailyReport.receipts.reduce((s, r) => s + Number(r.amountPaid ?? 0), 0))}
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            {formatCurrency(dailyReport.receipts.reduce((s, r) => s + Math.max(Number(r.total ?? 0) - Number(r.amountPaid ?? 0), 0), 0))}
+                          </td>
+                          <td />
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 )}
